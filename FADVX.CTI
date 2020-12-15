@@ -1,0 +1,139 @@
+Define LicensePath C:\tools\CDGen\LCNSFILE\
+Define LicenseFile lisoee.dat
+
+Disc CDROMXA_PSX ;the disk format
+
+	CatalogNumber 0000000000000
+
+	LeadIn XA ;lead in track (track 0)
+		Empty 1000 ;defines the lead in size (min 150)
+		PostGap 150 ;required gap at end of the lead in
+	EndTrack ;end of the lead in track
+
+	Track XA ;start of the XA (data) track
+
+		Pause 150 ;required pause in first track after the lead in
+
+		Volume ISO9660 ;define ISO 9660 volume
+			
+			SystemArea [LicensePath][LicenseFile]
+			
+			PrimaryVolume ;start point of primary volume
+				SystemIdentifier "PLAYSTATION" ;required indetifier (do not change)
+				VolumeIdentifier "FADVX" ;app specific identifiers (changeable)
+				VolumeSetIdentifier "FADVX" ;app specific identifiers (changeable)
+				PublisherIdentifier "SCEE" ;app specific identifiers (changeable)
+				DataPreparerIdentifier "SONY" ;app specific identifiers (changeable)
+				ApplicationIdentifier "PLAYSTATION" ;required indetifier (do not change)
+				LPath ;path tables as specified for PlayStation
+				OptionalLpath
+				MPath
+				OptionalMpath
+
+				Hierarchy ;start point of root directory definition
+
+					XAFileAttributes  Form1 Audio
+					XAVideoAttributes ApplicationSpecific
+					XAAudioAttributes ADPCM_C Stereo ;you can also add 'Emphasis_On' before Stereo
+
+					File SYSTEM.CNF
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\system.cnf
+					EndFile
+
+					File SLES_420.69
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\main.exe
+					EndFile
+					
+					File T1.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\t1.tim
+					EndFile
+					
+					File INTRO1.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\intro1.tim
+					EndFile
+					
+					File INTRO2.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\intro2.tim
+					EndFile
+					
+					File INTRO3.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\intro3.tim
+					EndFile
+
+					File INTRO.STR
+						XASource C:\projects\FlappyX\cdrom\2425.str
+					EndFile
+					
+					File BKG0.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\BKG0.TIM
+					EndFile
+					
+					Directory SND
+						File SFX_ABS1.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_abs1.vag
+						EndFile
+						
+						File SFX_CHCK.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_chck.vag
+						EndFile
+						
+						File SFX_COIN.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_coin.vag
+						EndFile
+						
+						File SFX_DIE.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_die.vag
+						EndFile
+						
+						File SFX_HIT.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_hit.vag
+						EndFile
+						
+						File SFX_SWSH.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_swsh.vag
+						EndFile
+						
+						File SFX_WING.VAG
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\snd\sfx_wing.vag
+						EndFile
+					EndDirectory
+					
+					File MUSIC1.XA
+						XASource C:\projects\FlappyX\cdrom\MUSIC1.XA
+					EndFile
+
+				EndHierarchy ;ends the root directory definition
+
+			EndPrimaryVolume ;ends the primary volume definition 
+
+		EndVolume ;ends the ISO 9660 definition
+
+		PostGap 150 ;required to change the track type
+	
+	EndTrack ;ends the track definition (end of the xa track)
+
+	;place as many audio tracks as you wish, but you must change the lead out to AUDIO instead of XA!
+	;Track AUDIO
+		;Pause 150
+		;Source  audio.raw ;raw cd-da audio
+	;EndTrack
+
+	LeadOut XA ;note that the leadout track must be the same data type as the last track (IE: AUDIO, XA or MODE1)
+		Empty 150
+	EndTrack
+
+EndDisc

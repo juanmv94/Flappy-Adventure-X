@@ -1,4 +1,3 @@
-#include "bkg.h"
 #include "feobjs.c"
 #include "customlv.c"
 
@@ -120,6 +119,7 @@ void printGame() {
 
 void checkPauseAndAlert() {
 	if (alertmsg) {
+		SpuSetCommonCDVolume(0x0fff, 0x0fff);
 		PLAYSFX(SFX_SWSH);
 		fullScreenBlack.r0=64; fullScreenBlack.g0=64; fullScreenBlack.b0=64;
 		DrawPrim(&fullScreenBlack);
@@ -128,16 +128,23 @@ void checkPauseAndAlert() {
 		nextFrameFlipBuff();
 		while (!(PadRead(1) & PADRdown)) VSync(0);
 		while (PadRead(1) & PADRdown) VSync(0);
+		SpuSetCommonCDVolume(0x3fff, 0x3fff);
 		alertmsg=0;
 	} else if (PadRead(1) & PADstart) {
+		u_char channel=0;	//Temp!!
+		SpuSetCommonCDVolume(0x0fff, 0x0fff);
 		PLAYSFX(SFX_SWSH);
 		fullScreenBlack.r0=96; fullScreenBlack.g0=96; fullScreenBlack.b0=48;
 		DrawPrim(&fullScreenBlack);
 		nextFrameFlipBuff();
 		while (PadRead(1) & PADstart) VSync(0);
-		while (!(PadRead(1) & PADstart)) VSync(0);
+		while (!(PadRead(1) & PADstart)) {
+			if (PadRead(1) & PADRdown) Sound_CD_XAChannel((channel++)&7);	//Temp!!
+			VSync(0);
+		}
 		while (PadRead(1) & PADstart) VSync(0);
 		PLAYSFX(SFX_SWSH);
+		SpuSetCommonCDVolume(0x3fff, 0x3fff);
 	}
 }
 
@@ -227,7 +234,9 @@ void updatePlayer() {
 }
 
 u_char startLevel(u_char lvlnum) {
-	loadTim((long)bkg);
+	sprintf(stringholder,"\\BKG%d.TIM;1",lvlnum);
+	loadTimCD(stringholder);
+	Sound_CD_PlayXA("\\MUSIC1.XA;1", lvlnum);
 	remCoins=lastRemCoins=ncoins;
 	coinCollected=(u_char*)calloc(ncoins,1); lastCoinCollected=(u_char*)calloc(ncoins,1);
 	flappyPos.vx=spawnpoint[0]<<4; flappyPos.vy=spawnpoint[1]<<4|9;

@@ -19,6 +19,35 @@ void loadTim(long tim) {
 	}
 }
 
+void loadTimCD(char* file) {
+	u_char* tim=readFromCD(file);
+	if (tim) {
+		loadTim((long)tim);
+		free(tim);
+	}
+}
+
+void introScreen(u_char num) {
+	static char* filename="\\INTRO$.TIM;1";
+	RECT introRect={x:320,y:272,w:320,h:240};
+	u_char i;
+	filename[6]=num+'0';
+	loadTimCD(filename);
+	PLAYSFX(SFX_ABS1);
+	for (i=63;i>0;i--) {
+		nextFrameFlipBuff();
+		DrawPrim(&tp);
+		MoveImage(&introRect,0,cdb->draw.clip.y);
+		fullScreenBlack.r0=i<<2; fullScreenBlack.g0=i<<2; fullScreenBlack.b0=i<<2;
+		DrawPrim(&fullScreenBlack);
+		if (PadRead(1) & PADstart) break;
+	}
+	for (i=0;i<32;i++) {
+		nextFrameFlipBuff();
+		MoveImage(&introRect,0,cdb->draw.clip.y);
+	}
+}
+
 void print(u_short dx, u_short dy, char *text) {
 	u_short x=0,y=0;
 	while(*text!=0) {
