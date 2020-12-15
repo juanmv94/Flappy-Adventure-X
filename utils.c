@@ -8,7 +8,6 @@ void nextFrameFlipBuff() {
 	PutDrawEnv(&cdb->draw);
 	PutDispEnv(&cdb->disp);
 }
-
 void loadTim(long tim) {
 	int palsize;
 	if (*(long*)tim!=16) return;	//Not a TIM file
@@ -23,6 +22,7 @@ void loadTimCD(char* file) {
 	u_char* tim=readFromCD(file);
 	if (tim) {
 		loadTim((long)tim);
+		DrawSync(0);
 		free(tim);
 	}
 }
@@ -45,6 +45,7 @@ void introScreen(u_char num) {
 	for (i=0;i<32;i++) {
 		nextFrameFlipBuff();
 		MoveImage(&introRect,0,cdb->draw.clip.y);
+		DrawSync(0);
 	}
 }
 
