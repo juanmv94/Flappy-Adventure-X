@@ -1,0 +1,476 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="content-language" content="es-ES" />
+<title>Flappy Adventure X LVL editor - Juanmv94</title>
+<style>
+body {
+	background-color:#000000;
+	font-family: cursive;
+}
+
+#toolbar {
+	position:fixed;
+	right:0;
+	top:0;
+	width:310px;
+	height: 100%;
+	padding: 4px;
+	padding-right: 14px;
+	background-color:#404040;
+	overflow-y: scroll;
+}
+
+#toolbartitle {
+	font-weight: bold;
+	font-size:22px;
+}
+
+label input[type=radio] {	/*hidden*/
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+label input[type=radio]:checked + div {
+	outline: 2px solid #f00;
+}
+
+.cellcolor {
+	height:50px;
+	width:50px;
+	display: inline-block;
+}
+
+#feobjs {
+	background-color:#505050;
+	margin-top: 2px;
+}
+.feobj {
+	background-color:#606060;
+	margin-top: 2px;
+	display: inline-grid;
+	width: 100%;
+}
+
+.feobjtitle {
+    font-weight: bold;
+	font-size:20px;
+}
+
+.feobjtitle input[type=button] {
+    float:right;
+}
+
+input[type=number] {
+	width: 100px;
+}
+
+input[type=text], input[type=number], textarea{
+	float:right;
+}
+</style>
+</head>
+<body>
+<div id="toolbar">
+	<input type="file" id="file_input" accept=".lvl">
+	<input type="button" value="Save" onclick="savelvl();">
+	<div id="toolbartitle">MODE</div>
+	<input type="radio" id="celledit" name="mode" value="celledit" checked><label for="celledit">Cell</label>
+	<input type="radio" id="coinedit" name="mode" value="coinedit"><label for="coinedit">Coin</label>
+	<input type="radio" id="feobjedit" name="mode" value="feobjedit"><label for="feobjedit">FEObj</label>
+	
+	<div id="toolbartitle">CELL TYPES</div>
+	<div>
+		<label>
+			<input type="radio" id="cell1" name="cell" value="cell1" checked>
+			<div class="cellcolor" style="background-color:#009900"></div>
+		<label>
+			<input type="radio" id="cell2" name="cell" value="cell2">
+			<div class="cellcolor" style="background-color:#DDDDDD"></div>
+		<label>
+		<label>
+			<input type="radio" id="cell3" name="cell" value="cell3">
+			<div class="cellcolor" style="background-color:#004400"></div>
+		<label>
+	</div>
+	<div><span>spawnpoint: </span><input type="number" id="spx"><input type="number" id="spy"></div>
+	<div id="feobjs">
+		<div id="toolbartitle">FE OBJECTS</div>
+		<select id="feobjtypes"></select><input type="button" value="Add" onclick="addFEObj();">
+		<div id="feobjslist">
+			<div class="feobj">
+				<div class="feobjtitle">ALERT</div>
+				<div><span>alerted: </span><input type="number" value="0" disabled></div>
+				<div><span>msg: </span><input type="text" value="Hello World"></div>
+			</div>
+		</div>
+	</div>
+</div>
+<canvas id="myCanvas" width="1008" height="1008"></canvas>
+<script src="testlvl.js"></script>
+<script src="objmap.js"></script>
+<script>
+var arrayBuffer,uint8,int8;
+
+var map,spawnpoint,coins,feobjs;
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+var feobjtypesl=document.getElementById("feobjtypes");
+for (let i=0;i<objmap.length;i++) {
+	let feobjtype = document.createElement('option');
+	feobjtype.value=i;
+	feobjtype.innerHTML=objmap[i].name;
+	feobjtypesl.appendChild(feobjtype);
+}
+
+uint8=testlvl; arrayBuffer=testlvl.buffer; int8=new Int8Array(arrayBuffer);
+loadlvl();
+print();
+
+function loadlvl() {
+		map=uint8.slice(0,63*63);
+		spawnpoint=[int8[63*63],int8[63*63+1]];
+		let ncoins=uint8[63*63+2];
+		let lp=63*63+3;
+		coins=[];
+		for (let i=0;i<ncoins;i++) {
+			coins.push([uint8[lp]+int8[lp+1]*256,uint8[lp+2]+int8[lp+3]*256]);
+			lp+=4;
+		}
+		let nfeobjs=uint8[lp++];
+		feobjs=[];
+		for (let i=0;i<nfeobjs;i++) {
+			let obj={type:uint8[lp],dx:uint8[lp+2]+int8[lp+3]*256,dy:uint8[lp+4]+int8[lp+5]*256};
+			obj.data=uint8.slice(lp+6,lp+6+uint8[lp+1]);
+			feobjs.push(obj);
+			lp+=uint8[lp+1]+6;
+		}
+		loadtoolbar();
+}
+
+function savelvl() {
+	var arr=[...map];
+	arr.push(spawnpoint[0]); arr.push(spawnpoint[1]);
+	arr.push(coins.length);
+	for (let i=0;i<coins.length;i++) {
+		arr.push(coins[i][0]&255); arr.push(coins[i][0]>>8);
+		arr.push(coins[i][1]&255); arr.push(coins[i][1]>>8);
+	}
+	arr.push(feobjs.length);
+	for (let i=0;i<feobjs.length;i++) {
+		arr.push(feobjs[i].type);
+		arr.push(feobjs[i].data.length);
+		arr.push(feobjs[i].dx&255); arr.push(feobjs[i].dx>>8);
+		arr.push(feobjs[i].dy&255); arr.push(feobjs[i].dy>>8);
+		arr=arr.concat([...feobjs[i].data]);
+	}
+	downloadBlob(new Uint8Array(arr),"LVL_.LVL","");
+}
+
+downloadBlob = function(data, fileName, mimeType) {
+  var blob, url;
+  blob = new Blob([data], {
+	type: mimeType
+  });
+  url = window.URL.createObjectURL(blob);
+  downloadURL(url, fileName);
+  setTimeout(function() {
+	return window.URL.revokeObjectURL(url);
+  }, 1000);
+};
+
+downloadURL = function(data, fileName) {
+  var a;
+  a = document.createElement('a');
+  a.href = data;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};
+
+document.getElementById("file_input").addEventListener('change', function () {
+    var reader = new FileReader();
+	reader.onload = function() {
+		arrayBuffer = this.result;
+		uint8 = new Uint8Array(arrayBuffer),
+		int8 = new Int8Array(arrayBuffer),
+		loadlvl()
+		print();
+  }
+  reader.readAsArrayBuffer(this.files[0]);
+});
+
+function print() {
+	for (let i=0;i<63;i++) for (let j=0;j<63;j++) {
+		switch (map[i+j*63]) {
+			case 0: ctx.fillStyle="#101040"; break;
+			case 1: ctx.fillStyle="#009900"; break;
+			case 2: ctx.fillStyle="#DDDDDD"; break;
+			case 3: ctx.fillStyle="#004400"; break;
+		}
+		ctx.fillRect(16*i, 16*j, 16, 16);
+	}
+	ctx.fillStyle="orange";
+	ctx.fillRect(((32+spawnpoint[0])<<4)+2, ((32+spawnpoint[1])<<4)+2, 12, 12);
+	ctx.fillStyle="yellow";
+	coins.forEach(function(c) {
+		ctx.fillRect(c[0]+512, c[1]+512, 8, 8);
+	});
+	ctx.fillStyle="blue";
+	feobjs.forEach(function(c) {
+		ctx.fillRect(512+c.dx+objmap[c.type].rect[0][0], 512+c.dy+objmap[c.type].rect[0][1], objmap[c.type].rect[1][0], objmap[c.type].rect[1][1]);
+	});
+}
+
+function loadtoolbar() {
+	document.getElementById("spx").value=spawnpoint[0];
+	document.getElementById("spy").value=spawnpoint[1];
+	let fol=document.getElementById("feobjslist");
+	fol.innerHTML="";
+	feobjs.forEach(function(feo) {
+		var feod = document.createElement('div');
+		feod.className="feobj";
+		
+		let feotitled = document.createElement('div');
+		feotitled.className="feobjtitle";
+		feotitled.innerHTML=objmap[feo.type].name +" ("+(feobjs.indexOf(feo))+")";
+		let feotitledX = document.createElement('input');
+		feotitledX.type="button";
+		feotitledX.value="X";
+		feotitledX.onclick=function() {deleteFEObj(feo);}
+		feotitled.appendChild(feotitledX);
+		let feotitledU = document.createElement('input');
+		feotitledU.type="button";
+		feotitledU.value="↑";
+		feotitledU.onclick=function() {upFEOb(feobjs.indexOf(feo));}
+		feotitled.appendChild(feotitledU);
+		let feotitledD = document.createElement('input');
+		feotitledD.type="button";
+		feotitledD.value="↓";
+		feotitledD.onclick=function() {upFEOb(feobjs.indexOf(feo)+1);}
+		feotitled.appendChild(feotitledD);
+		feod.appendChild(feotitled);
+		
+		let posd = document.createElement('div');
+		posd.className="feobjpos";
+		let postitled = document.createElement('span');
+		postitled.innerHTML="position: ";
+		posd.appendChild(postitled);
+		posyd = document.createElement('input');
+		posyd.type="number";
+		posyd.value=feo.dy;
+		posyd.onchange=function(e) {feo.dy=parseInt(e.target.value);print();}
+		posd.appendChild(posyd);
+		posxd = document.createElement('input');
+		posxd.type="number";
+		posxd.value=feo.dx;
+		posxd.onchange=function(e) {feo.dx=parseInt(e.target.value);print();}
+		posd.appendChild(posxd);
+		feod.appendChild(posd);
+		
+		let p=0;
+		objmap[feo.type].props.forEach(function(prop) {
+			let propd = document.createElement('div');
+			let proptitled = document.createElement('span');
+			proptitled.innerHTML=prop.name+": ";
+			propd.appendChild(proptitled);
+			var propfieli;
+			if (prop.type==3) {
+				propfieli = document.createElement('textarea');
+				let strp=feo.data.slice(p);
+				propfieli.value=String.fromCharCode.apply(null, strp.slice(0,strp.indexOf(0)));
+			} else {
+				propfieli = document.createElement('input');
+				propfieli.type="number";
+				switch (prop.type) {
+					case 0:
+					propfieli.value=feo.data[p++];
+					break;
+					case 1:
+					propfieli.value=feo.data[p++]+feo.data[p++]*256;
+					break;
+					case 2:
+					propfieli.value=feo.data[p++]+feo.data[p++]*256+feo.data[p++]*256*256+feo.data[p++]*256*256*256;
+					break;
+					case 2:
+					propfieli.value=feo.data[p++]+feo.data[p++]*256+feo.data[p++]*256*256+feo.data[p++]*256*256*256;
+					break;
+				}
+			}
+			if (!prop.mod) propfieli.disabled=true;
+			else propfieli.onchange=function(){updateObjData(feo,feod);}
+			propd.appendChild(propfieli);
+			feod.appendChild(propd);
+		});
+		fol.appendChild(feod);
+	});
+}
+
+function upFEOb(index) {
+	if (index<1 || index>=feobjs.length) return;
+	let tmp=feobjs[index-1];
+	feobjs[index-1]=feobjs[index];
+	feobjs[index]=tmp;
+	loadtoolbar();
+}
+
+function updateObjData(feo,feod) {
+	let arr=[];
+	let divs=feod.getElementsByTagName("div");
+	let props=objmap[feo.type].props;
+	for (let i=0;i<props.length;i++) {
+		switch (props[i].type) {
+			case 0: {
+				let val=parseInt(divs[2+i].getElementsByTagName("input")[0].value);
+				arr.push(val);
+				break;
+			}
+			case 1: {
+				let val=parseInt(divs[2+i].getElementsByTagName("input")[0].value);
+				arr.push(val&255);arr.push(val>>8);
+				break;
+			}
+			case 2: {
+				let val=parseInt(divs[2+i].getElementsByTagName("input")[0].value);
+				arr.push(val&255);arr.push((val>>8)&255); arr.push((val>>16)&255); arr.push(val>>24);
+				break;
+			}
+			case 3: {
+				let val=divs[2+i].getElementsByTagName("textarea")[0].value.split("").map(x=>x.charCodeAt(0));
+				arr=arr.concat(val);
+				arr.push(0);
+				break;
+			}
+		}
+	}
+	feo.data=new Uint8Array(arr);
+}
+
+function addFEObj() {
+	if (feobjs.length>=255) return 254;
+	let obj={type:parseInt(feobjtypes.value),dx:0,dy:0};
+	obj.data=new Uint8Array(objmap[feobjtypes.value].def);
+	var index=feobjs.push(obj)-1;
+	loadtoolbar();
+	print();
+	return index;
+}
+function deleteFEObj(feo) {
+	feobjs.splice(feobjs.indexOf(feo),1);
+	loadtoolbar();
+	print();
+}
+
+var optcelledit=document.getElementById("celledit");
+var optcoinedit=document.getElementById("coinedit");
+var optfeobjedit=document.getElementById("feobjedit");
+var mousedown=false, button=0; curcoin=0; curobj=0; editspawnpoint=false;
+
+function getMousePosition(canvas, event) { 
+	let rect = canvas.getBoundingClientRect(); 
+	return [event.clientX - rect.left,event.clientY - rect.top]; 
+}
+
+function celledit(p) {
+	function selcel() {
+		let cells=document.getElementsByName('cell');
+		for (let i=0;i<cells.length;i++) if (cells[i].checked) {
+			return cells[i].value.substr(4);
+		}
+	}
+	let index=(p[0]>>4)+(p[1]>>4)*63;
+	let selval=(button)?0:selcel();
+	if (map[index]!=selval) {
+		map[index]=selval; print();
+	}
+}
+
+function coineditadd(p) {
+	let clickedcoins=coins.filter(x=>Math.abs(p[0]-516-x[0])<=4 && Math.abs(p[1]-516-x[1])<=4);
+	if (clickedcoins.length>0) {
+		curcoin=coins.indexOf(clickedcoins[0]);
+	} else {
+		if (coins.length<255) curcoin=coins.push([p[0]-516,p[1]-516])-1;
+		else curcoin=254;
+		print();
+	}
+}
+
+function coineditdelete(p) {
+	coins=coins.filter(x=>Math.abs(p[0]-516-x[0])>4 || Math.abs(p[1]-516-x[1])>4);
+	print();
+}
+
+function coineditmove(p) {
+	coins[curcoin]=[p[0]-516,p[1]-516];
+	print();
+}
+
+function objeditadd(p) {
+	if((p[0]-512)>>4==spawnpoint[0] && (p[1]-512)>>4==spawnpoint[1]) {
+		editspawnpoint=true; return;
+	}
+	editspawnpoint=false;
+	let clickedobjs=feobjs.filter(x=>(p[0]-512-x.dx-objmap[x.type].rect[0][0])>=0 && (p[0]-512-x.dx-objmap[x.type].rect[0][0]-objmap[x.type].rect[1][0])<=0 && (p[1]-512-x.dy-objmap[x.type].rect[0][1])>=0 && (p[1]-512-x.dy-objmap[x.type].rect[0][1]-objmap[x.type].rect[1][1])<=0);
+	if (clickedobjs.length>0) {
+		curobj=feobjs.indexOf(clickedobjs[0]);
+	} else {
+		curobj=addFEObj();
+		objeditmove(p);
+	}
+}
+
+function objeditdelete(p) {
+	feobjs=feobjs.filter(x=>(p[0]-512-x.dx-objmap[x.type].rect[0][0])<=0 || (p[0]-512-x.dx-objmap[x.type].rect[0][0]-objmap[x.type].rect[1][0])>=0 || (p[1]-512-x.dy-objmap[x.type].rect[0][1])<=0 || (p[1]-512-x.dy-objmap[x.type].rect[0][1]-objmap[x.type].rect[1][1])>=0);
+	print();
+}
+
+function objeditmove(p) {
+	if (editspawnpoint) spawnpoint=[(p[0]-512)>>4,(p[1]-512)>>4];
+	else {feobjs[curobj].dx=Math.round((p[0]-512)/16)*16; feobjs[curobj].dy=Math.round((p[1]-512)/16)*16;}
+	print();
+}
+
+c.addEventListener( "contextmenu", function(e) {
+    e.preventDefault();
+});
+
+c.addEventListener("mousedown", function(e) {
+	mousedown=true;
+	let mp=getMousePosition(c, e);
+	button=e.button;
+	if (optcelledit.checked) celledit(mp);
+	else if (optcoinedit.checked) {
+		if (!button) coineditadd(mp);
+		else coineditdelete(mp);
+	} else if (optfeobjedit.checked) {
+		if (!button) objeditadd(mp);
+		else objeditdelete(mp);
+	}
+});
+
+c.addEventListener("mousemove", function(e) {
+	if (!mousedown) return;
+	let mp=getMousePosition(c, e);
+	if (optcelledit.checked) celledit(mp);
+	else if (optcoinedit.checked) {
+		if (!button) coineditmove(mp);
+		else coineditdelete(mp);
+	} else if (optfeobjedit.checked) {
+		if (!button) objeditmove(mp);
+		else objeditdelete(mp);
+	}
+});
+
+c.addEventListener("mouseup", function(e) {
+	mousedown=false;
+	if (optfeobjedit.checked) loadtoolbar();
+});
+</script>
+</body>
+</html>

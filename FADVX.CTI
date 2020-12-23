@@ -46,6 +46,46 @@ Disc CDROMXA_PSX ;the disk format
 						Source C:\projects\FlappyX\main.exe
 					EndFile
 					
+					File SFX_ABS1.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_abs1.vag
+					EndFile
+					
+					File SFX_CHCK.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_chck.vag
+					EndFile
+					
+					File SFX_COIN.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_coin.vag
+					EndFile
+					
+					File SFX_DIE.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_die.vag
+					EndFile
+					
+					File SFX_HIT.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_hit.vag
+					EndFile
+					
+					File SFX_SWSH.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_swsh.vag
+					EndFile
+					
+					File SFX_WING.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_wing.vag
+					EndFile
+					
+					File SFX_TTAC.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_ttac.vag
+					EndFile
+					
 					File T1.TIM
 						XAFileAttributes Form1 Data
 						Source C:\projects\FlappyX\cdrom\t1.tim
@@ -75,42 +115,10 @@ Disc CDROMXA_PSX ;the disk format
 						Source C:\projects\FlappyX\cdrom\BKG0.TIM
 					EndFile
 					
-					Directory SND
-						File SFX_ABS1.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_abs1.vag
-						EndFile
-						
-						File SFX_CHCK.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_chck.vag
-						EndFile
-						
-						File SFX_COIN.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_coin.vag
-						EndFile
-						
-						File SFX_DIE.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_die.vag
-						EndFile
-						
-						File SFX_HIT.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_hit.vag
-						EndFile
-						
-						File SFX_SWSH.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_swsh.vag
-						EndFile
-						
-						File SFX_WING.VAG
-							XAFileAttributes Form1 Data
-							Source C:\projects\FlappyX\cdrom\snd\sfx_wing.vag
-						EndFile
-					EndDirectory
+					File LVL0.LVL
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\LVL\LVL0.LVL
+					EndFile
 					
 					File MUSIC1.XA
 						XASource C:\projects\FlappyX\cdrom\MUSIC1.XA

@@ -35,27 +35,28 @@ void introScreen(u_char num) {
 	loadTimCD(filename);
 	PLAYSFX(SFX_ABS1);
 	for (i=63;i>0;i--) {
-		nextFrameFlipBuff();
 		DrawPrim(&tp);
 		MoveImage(&introRect,0,cdb->draw.clip.y);
 		fullScreenBlack.r0=i<<2; fullScreenBlack.g0=i<<2; fullScreenBlack.b0=i<<2;
 		DrawPrim(&fullScreenBlack);
-		if (PadRead(1) & PADstart) break;
-	}
-	for (i=0;i<32;i++) {
 		nextFrameFlipBuff();
+		if (!gamePad[0].start) break;
+	}
+	for (i=0;i<64;i++) {
 		MoveImage(&introRect,0,cdb->draw.clip.y);
 		DrawSync(0);
+		nextFrameFlipBuff();
 	}
 }
 
-void print(u_short dx, u_short dy, char *text) {
+void print(u_short dx, u_short dy, u_char r0, u_char g0, u_char b0, u_char st, char *text) {
 	u_short x=0,y=0;
+	charSprt.r0=r0; charSprt.g0=g0; charSprt.b0=b0;
+	SetSemiTrans(&charSprt,st);
 	while(*text!=0) {
 		if (*text=='\n') {x=0; y+=8;} else {
 			char c=*text-0x20;
 			charSprt.u0=(c&31)<<3; charSprt.v0=174+((c>>5)<<3);
-			//charSprt.u0=8; charSprt.v0=174;
 			charSprt.x0=x+dx; charSprt.y0=y+dy;
 			DrawPrim(&charSprt);
 			x+=8;
@@ -64,11 +65,11 @@ void print(u_short dx, u_short dy, char *text) {
 	}
 }
 
-#define PRINTFMT(DX, DY, ARGS...) \
+#define PRINTFMT(DX, DY, R0, G0, B0, ST, ARGS...) \
 {\
 	char stringholder[128];\
 	sprintf(stringholder, ARGS);\
-	print(DX,DY,stringholder);\
+	print(DX,DY,R0,G0,B0,ST,stringholder);\
 } 
 
 void printNum(u_short dx, u_short dy,u_short num) {

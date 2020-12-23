@@ -2,7 +2,7 @@
 #include <libsnd.h>
 #include <libspu.h>
 
-#define MALLOC_MAX 7
+#define MALLOC_MAX 8
 #define PLAYSFX(X) SpuSetKey(SpuOn,X)
 #define STOPSFX(X) SpuSetKey(SpuOff,X)
 
@@ -13,6 +13,7 @@
 #define SFX_WING SPU_4CH
 #define SFX_CHCK SPU_5CH
 #define SFX_SWSH SPU_6CH
+#define SFX_TTAC SPU_7CH
 
 //Generic CD
 
@@ -94,13 +95,14 @@ void initFACDAudio() {
 	u_char *p;
 	InitMusicCDSystem();
 	
-	p=readFromCD("\\SND\\SFX_ABS1.VAG;1"); spuadd[0]=SendVAGToRAM(p,6800); free(p); SetVoiceAttr(SFX_ABS1,spuadd[0]);
-	p=readFromCD("\\SND\\SFX_DIE.VAG;1"); spuadd[1]=SendVAGToRAM(p,18992); free(p); SetVoiceAttr(SFX_DIE,spuadd[1]);
-	p=readFromCD("\\SND\\SFX_HIT.VAG;1"); spuadd[2]=SendVAGToRAM(p,13792); free(p); SetVoiceAttr(SFX_HIT,spuadd[2]);
-	p=readFromCD("\\SND\\SFX_COIN.VAG;1"); spuadd[3]=SendVAGToRAM(p,25280); free(p); SetVoiceAttr(SFX_COIN,spuadd[3]);
-	p=readFromCD("\\SND\\SFX_WING.VAG;1"); spuadd[4]=SendVAGToRAM(p,8144); free(p); SetVoiceAttr(SFX_WING,spuadd[4]);
-	p=readFromCD("\\SND\\SFX_CHCK.VAG;1"); spuadd[5]=SendVAGToRAM(p,15200); free(p); SetVoiceAttr(SFX_CHCK,spuadd[5]);
-	p=readFromCD("\\SND\\SFX_SWSH.VAG;1"); spuadd[6]=SendVAGToRAM(p,17728); free(p); SetVoiceAttr(SFX_SWSH,spuadd[6]);
+	p=readFromCD("\\SFX_ABS1.VAG;1"); spuadd[0]=SendVAGToRAM(p,6800); free(p); SetVoiceAttr(SFX_ABS1,spuadd[0]);
+	p=readFromCD("\\SFX_DIE.VAG;1"); spuadd[1]=SendVAGToRAM(p,18992); free(p); SetVoiceAttr(SFX_DIE,spuadd[1]);
+	p=readFromCD("\\SFX_HIT.VAG;1"); spuadd[2]=SendVAGToRAM(p,13792); free(p); SetVoiceAttr(SFX_HIT,spuadd[2]);
+	p=readFromCD("\\SFX_COIN.VAG;1"); spuadd[3]=SendVAGToRAM(p,25280); free(p); SetVoiceAttr(SFX_COIN,spuadd[3]);
+	p=readFromCD("\\SFX_WING.VAG;1"); spuadd[4]=SendVAGToRAM(p,8144); free(p); SetVoiceAttr(SFX_WING,spuadd[4]);
+	p=readFromCD("\\SFX_CHCK.VAG;1"); spuadd[5]=SendVAGToRAM(p,15200); free(p); SetVoiceAttr(SFX_CHCK,spuadd[5]);
+	p=readFromCD("\\SFX_SWSH.VAG;1"); spuadd[6]=SendVAGToRAM(p,17728); free(p); SetVoiceAttr(SFX_SWSH,spuadd[6]);
+	p=readFromCD("\\SFX_TTAC.VAG;1"); spuadd[7]=SendVAGToRAM(p,11072); free(p); SetVoiceAttr(SFX_TTAC,spuadd[7]);
 }
 
 //XA Play
@@ -120,7 +122,7 @@ void callBackXA(int intr, u_char *result) {	//Callback for each sector of XA rea
 	} else printf("UnHandled Callback Occured\n");	
 }
 
-void Sound_CD_PlayXA(char *filename, u_char channel) {
+void Sound_CD_XAPlay(char *filename, u_char channel) {
 	CdlFILE		fp;
 	CdlFILTER	filter;
 	u_char		param[4];
@@ -141,10 +143,14 @@ void Sound_CD_PlayXA(char *filename, u_char channel) {
 	CdReadyCallback((CdlCB)callBackXA);	//Callback for each sector of XA read
 }
 
-void Sound_CD_XAChannel(u_char channel) {
+void Sound_CD_XAChangeChannel(u_char channel) {
 	CdlFILTER	filter;
 
 	filter.file = 1;
 	filter.chan = channel;
 	CdControl(CdlSetfilter, (u_char *)&filter, 0);
+}
+
+void Sound_CD_XAStop() {
+	CdControl(CdlStop, 0, 0);
 }

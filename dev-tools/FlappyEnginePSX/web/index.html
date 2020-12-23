@@ -1,0 +1,164 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="content-language" content="es-ES" />
+    <title>FlappyEnginePSX - Juanmv94</title>
+	<style>
+		body { margin: 0; }
+		canvas { width: 100%; height: 100% }
+	</style>
+  </head>
+  <body>
+    <script src="./three.min.js"></script>
+	<script src="./ColladaLoader2.js"></script>
+	<script src="./FlyControls.js"></script>
+	<script>
+	var loader = new THREE.ColladaLoader();
+	var scene = new THREE.Scene();
+	scene.background = new THREE.Color(0x333333);
+	var camera = new THREE.PerspectiveCamera( 50, window.innerWidth/window.innerHeight, 0.1, 10000 );
+	camera.position.x=0; camera.position.y=-64; camera.position.z=-128;
+	camera.rotation.x=Math.PI; camera.rotation.y=0; camera.rotation.z=0;
+	var renderer = new THREE.WebGLRenderer({antialias: false});
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	document.body.appendChild( renderer.domElement );
+	
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+	}
+	window.addEventListener( 'resize', onWindowResize, false );
+	
+	var controls = new THREE.FlyControls( camera, renderer.domElement );
+	var t=performance.now();
+	var animate = function () {
+		requestAnimationFrame( animate );
+		var newt=performance.now();
+		controls.update(newt-t);
+		t=newt;
+		renderer.render( scene, camera );
+	};
+	animate();
+	
+	var plist=[]
+	
+	function getPSXPoly(poly) {
+		if (poly.material.color===undefined) {
+			console.log("Wrong material!");
+			return;
+		}
+		var psxpoly={d:!!poly.parent.name.match(/d/),r:Math.round(poly.material.color.r*255),g:Math.round(poly.material.color.g*255),b:Math.round(poly.material.color.b*255)};
+		const position = poly.geometry.attributes.position;
+		
+		function addpcoordinates(c,v) {
+			//poly.updateMatrixWorld();
+			const vector = new THREE.Vector3();
+			vector.fromBufferAttribute(position, v);
+			//poly.localToWorld(vector);
+			psxpoly["x"+c]=Math.round(vector.x+poly.parent.position.x);
+			psxpoly["z"+c]=Math.round(vector.y+poly.parent.position.y);
+			psxpoly["y"+c]=-Math.round(vector.z+poly.parent.position.z);
+		}
+		
+		if (position.count==6) {	//Quad
+			psxpoly.t=1;
+			addpcoordinates(0,1);
+			addpcoordinates(1,2);
+			addpcoordinates(2,4);
+			addpcoordinates(3,5);
+		} else if (position.count==3) {
+			psxpoly.t=0;
+			addpcoordinates(0,0);
+			addpcoordinates(1,1);
+			addpcoordinates(2,2);
+		} else {
+			console.log("Wrong meshes!"+position.count);
+			return;
+		}
+		plist.push(psxpoly);
+	}
+	
+	loader.load( "test.dae", function (collada) {
+		model = collada.scene.children[0].children;
+		//scene.add(collada.scene.children[0]);
+		nodepth=model.filter(x=>x.type=="Mesh");
+		nodepth.forEach(getPSXPoly);
+		for (let i=0,gr=model.find(x=>x.name.replaceAll(/\D/g,"")===i.toString()) ; gr!=undefined ; i++) {
+			gr.children.forEach(getPSXPoly);
+			gr=model.find(x=>x.name.replaceAll(/\D/g,"")===i.toString());
+		}
+		console.log("end");
+		var i=0;
+		plist.forEach(poly=>{
+			var mat=new THREE.MeshBasicMaterial({depthWrite:false, depthTest:false});
+			if (poly.d) mat.side=THREE.DoubleSide;
+			mat.color=[poly.r/255,poly.g/255,poly.b/255];
+			var geom = new THREE.Geometry();
+			for (let i=0;i<3+poly.t;i++) {
+				let v=new THREE.Vector3(poly["x"+i],poly["y"+i],poly["z"+i]);
+				geom.vertices.push(v);
+			}
+			if (poly.t) {
+				var face=new THREE.Face3(0,1,2);
+				geom.faces.push(face);
+				face=new THREE.Face3(0,2,3);
+				geom.faces.push(face);
+			} else {
+				var face=new THREE.Face3(0,1,2);
+				geom.faces.push(face);
+			}
+			var obj=new THREE.Mesh(geom,mat);
+			obj.renderOrder=i++;
+			scene.add(obj);
+		});
+		createDataArr();
+	});
+	
+	var uint8arr;
+	
+	function createDataArr() {
+		var arr=[plist.length];
+		console.log("Creating data arr of "+plist.length+" polygons");
+		plist.forEach(poly=>{
+			var flags=2*poly.d+1*poly.t;
+			arr.push(flags);
+			arr.push(poly.r);arr.push(poly.g);arr.push(poly.b)
+			arr.push(poly.x0&255); arr.push(poly.x0>>8); arr.push(poly.y0&255); arr.push(poly.y0>>8); arr.push(poly.z0&255); arr.push(poly.z0>>8);
+			arr.push(poly.x1&255); arr.push(poly.x1>>8); arr.push(poly.y1&255); arr.push(poly.y1>>8); arr.push(poly.z1&255); arr.push(poly.z1>>8);
+			arr.push(poly.x2&255); arr.push(poly.x2>>8); arr.push(poly.y2&255); arr.push(poly.y2>>8); arr.push(poly.z2&255); arr.push(poly.z2>>8);
+			if (poly.t) {arr.push(poly.x3&255); arr.push(poly.x3>>8); arr.push(poly.y3&255); arr.push(poly.y3>>8); arr.push(poly.z3&255); arr.push(poly.z3>>8);}
+		});
+		uint8arr=new Uint8Array(arr);
+	}
+	
+	
+	////////////////////////
+	
+	downloadBlob = function(data, fileName, mimeType) {
+	  var blob, url;
+	  blob = new Blob([data], {
+		type: mimeType
+	  });
+	  url = window.URL.createObjectURL(blob);
+	  downloadURL(url, fileName);
+	  setTimeout(function() {
+		return window.URL.revokeObjectURL(url);
+	  }, 1000);
+	};
+
+	downloadURL = function(data, fileName) {
+	  var a;
+	  a = document.createElement('a');
+	  a.href = data;
+	  a.download = fileName;
+	  document.body.appendChild(a);
+	  a.click();
+	  a.remove();
+	};
+    </script>
+	<input type="button" style="position: fixed; top:0; right:0" value="Download binary" onclick="downloadBlob(uint8arr,'FEPSX.raw','');">
+  </body>
+</html>
+ 
+ 

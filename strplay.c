@@ -158,17 +158,18 @@ int PlayStr(int xres, int yres, char* filename, u_long numframes) {	//Main STR p
 		disp.isrgb24 = IS_RGB24;
 		disp.disp.w = disp.disp.w*2/3;
 		#endif
+		disp.screen.y=32;
 
 		VSync(0);			// VSync to avoid screen tearing
 		PutDispEnv(&disp);	// Apply the video parameters
 		SetDispMask(1);		// Remove the display mask
 		
 		if(strPlayDone == 1) break;
-		if(PadRead(1) & PADstart) break;  //stop button pressed exit animation routine
+		if(!gamePad[0].start) break;  //stop button pressed exit animation routine
 	}
 	DecDCToutCallback(0);	//Shutdown streaming
 	StUnSetRing();
 	CdControlB(CdlPause, 0, 0);
-	while (PadRead(1) & PADstart);
+	while (gamePad[0].start);
 	return strPlayDone;
 }

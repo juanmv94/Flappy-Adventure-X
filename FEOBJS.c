@@ -106,7 +106,7 @@ void door(struct FEObject* feo) {
 		printFEModel(model_door1, feo->dx, feo->dy);
 		if (abs(feo->dx-flappyPos.vx)<10 && (feo->dy-flappyPos.vy)<16 && (feo->dy-flappyPos.vy)>=0) {
 			if (fflags&2) {
-				if ((feo->dx-flappyPos.vx)<0) flappyPos.vx=feo->dx+10; else flappyPos.vx=feo->dx-10;
+				if (feo->dx<flappyPos.vx) flappyPos.vx=feo->dx+10; else flappyPos.vx=feo->dx-10;
 			} else {
 				fflags|=8;
 			}
@@ -114,6 +114,32 @@ void door(struct FEObject* feo) {
 	}
 }
 
+void block(struct FEObject* feo) {
+	u_char falling=0;
+	printFEModel(model_block, feo->dx, feo->dy);
+	if (!(feo->dx&15)) {	//Can fall?
+		if (!b((feo->dy>>4)+32,(feo->dx>>4)+32)) {falling=1; if (!(fflags&32)) feo->dy++;}
+	}
+	if (abs(feo->dx-flappyPos.vx+8)<14 && (feo->dy-flappyPos.vy)<24 && (feo->dy-flappyPos.vy)>=0) {	//collision
+		if (fflags&2 && (feo->dy-flappyPos.vy)<23) {		//on-ground collision
+			if (feo->dx<flappyPos.vx) {
+				flappyPos.vx=feo->dx+22;
+				if (!falling && !b((feo->dy>>4)+31,(feo->dx>>4)+32)) feo->dx--;
+			} else {
+				flappyPos.vx=feo->dx-6;
+				if (!falling && !b((feo->dy>>4)+31,(feo->dx>>4)+33)) feo->dx++;
+			}
+		} else {			//on-air collision
+			if ((feo->dy-flappyPos.vy)<16) {			//down part collision
+				fflags|=8;
+			} else {		//up part collision
+				fflags|=4;
+				flappyPos.vy=feo->dy-23;
+			}
+		}
+	}
+}
+
 typedef void (*FEFunc)(struct FEObject*);
 
-FEFunc FEFuncArray[6]= {&alert,&yflag,&platform,&pipe,&button,&door};
+FEFunc FEFuncArray[7]= {&alert,&yflag,&platform,&pipe,&button,&door,&block};
