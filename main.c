@@ -38,7 +38,7 @@ int main() {
 	SetDefDispEnv(&db[0].disp, 0, 240, 320, 240);
 	SetDefDispEnv(&db[1].disp, 0, 0, 320, 240);
 	db[0].disp.screen.y=32; db[1].disp.screen.y=32;
-	nextFrameFlipBuff();
+	nextFrameFlipBuff();					 
 	for (i=0;i<64;i++) {
 		printStartMsg("Flappy Adventure X");
 	}
@@ -77,6 +77,7 @@ int main() {
 	PlayStr(320,240,"\\INTRO.STR;1",2425);
 	while (1) {
 		startLevel(0);
+		startLevel(1);
 	}
 	return 0;
 }

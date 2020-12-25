@@ -152,5 +152,6 @@ void Sound_CD_XAChangeChannel(u_char channel) {
 }
 
 void Sound_CD_XAStop() {
-	CdControl(CdlStop, 0, 0);
+	CdControl(CdlPause, 0, 0);
+	CdReadyCallback(0);
 }

@@ -28,6 +28,8 @@ struct s_gamePad {
   u_char an1v;
   u_char an2h;
   u_char an2v;
+  
+  u_char padding[26];
 };
 
 struct s_gamePad gamePad[2];

@@ -247,10 +247,15 @@ void updatePlayer() {
 		switch (b((flappyPos.vy>>4)+33,(flappyPos.vx>>4)+32)) {
 			case 1:	//normal ground
 			if (gamePadLeft(0)) {flappyPos.vx--; fflags|=1;}
-			if (gamePadRight(0)) {flappyPos.vx++; fflags&=0xFE;}
+			else if (gamePadRight(0)) {flappyPos.vx++; fflags&=0xFE;}
 			flappyAng.vy=(fflags&1)?2048:0;
 			break;
 			case 2:	//ice ground
+			if ((flappyPos.vx&15)==8 && (b((flappyPos.vy>>4)+32,(flappyPos.vx>>4)+33) || b((flappyPos.vy>>4)+32,(flappyPos.vx>>4)+31))) {	//wallhit
+				if (gamePadLeft(0)) fflags|=1;
+				else if (gamePadRight(0)) fflags&=0xFE;
+				flappyAng.vy=(fflags&1)?2048:0;
+			}
 			if (fflags&1) flappyPos.vx--; else flappyPos.vx++;
 			break;
 			default: //obstacle
@@ -300,6 +305,7 @@ u_char startLevel(u_char lvlnum) {
 	sprintf(stringholder,"\\LVL%d.LVL;1",lvlnum);
 	loadLvlCD(stringholder);
 	levelCustomCode[lvlnum].onStart();
+	audioChannel=lvlnum;
 	Sound_CD_XAPlay("\\MUSIC1.XA;1", lvlnum);
 	while (!levelExitCode) {
 		nextFrameFlipBuff();
