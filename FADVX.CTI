@@ -130,6 +130,26 @@ Disc CDROMXA_PSX ;the disk format
 						Source C:\projects\FlappyX\cdrom\LVL\LVL1.LVL
 					EndFile
 					
+					File BKG2.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\BKG2.TIM
+					EndFile
+					
+					File LVL2.LVL
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\LVL\LVL2.LVL
+					EndFile
+					
+					File BKG3.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\BKG3.TIM
+					EndFile
+					
+					File LVL3.LVL
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\LVL\LVL3.LVL
+					EndFile
+					
 					File MUSIC1.XA
 						XASource C:\projects\FlappyX\cdrom\MUSIC1.XA
 					EndFile

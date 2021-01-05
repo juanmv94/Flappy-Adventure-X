@@ -41,7 +41,7 @@ struct MCHeader mCardData={
 void loadMemCard() {
 	long cmds;
 	long result;
-	MemCardInit(1);
+	MemCardInit(0);
 	MemCardStart();
 	MemCardSync(0, &cmds, &result);
 	result=MemCardCreateFile(0,"FLADVX",1);

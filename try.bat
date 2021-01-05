@@ -1,1 +1,0 @@
-"C:\Users\Juan\Documents\ROMS Retro\psx\nopsx\no$psx.exe" FADVX.CUE

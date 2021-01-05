@@ -1,5 +1,7 @@
 #define persp 100
 
+u_char lvlnum;
+
 //Game cells
 u_char level[63][63];
 
@@ -25,6 +27,9 @@ u_char levelExitCode;		//0=level in progress, 1=failed (pause menu exit, for exa
 u_long frame;
 
 //Graphic elements
+u_short tpages[3];
+DR_TPAGE tp[3];	//DR TPAGE for sprites
+
 //Flappy
 POLY_FT4 fp[4]={	//We still need to set tpage
 	{r0:128, g0:128, b0:128, u0:0, v0:238, u1:0, v1:255, u2:17, v2:238, u3:17, v3:255},
@@ -36,7 +41,6 @@ POLY_FT4 p[3]={		//We still need to set tpage
 	{u0:0, v0:0, u1:0, v1:31, u2:31, v2:0, u3:31, v3:31},
 	{u0:32, v0:0, u1:32, v1:31, u2:63, v2:0, u3:63, v3:31},
 	{u0:64, v0:0, u1:64, v1:31, u2:95, v2:0, u3:95, v3:31}};
-DR_TPAGE tp;	//DR TPAGE for sprites
 SPRT s[3]={
 	{r0:128, g0:128, b0:128, w:32, h:32, u0:0, v0:0},
 	{r0:128, g0:128, b0:128, w:32, h:32, u0:32, v0:0},

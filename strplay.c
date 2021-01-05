@@ -170,6 +170,6 @@ int PlayStr(int xres, int yres, char* filename, u_long numframes) {	//Main STR p
 	DecDCToutCallback(0);	//Shutdown streaming
 	StUnSetRing();
 	CdControlB(CdlPause, 0, 0);
-	while (gamePad[0].start);
+	while (!gamePad[0].start) VSync(0);
 	return strPlayDone;
 }

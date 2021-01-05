@@ -42,11 +42,13 @@ void unLoadLvl() {
 void updateGameWorldPos() {
 	pos.vx=(flappyPos.vx>400)?-400:(flappyPos.vx<-416)?416:-flappyPos.vx;
 	if (gamePadDown(0)) pos.vy--;
-	if (gamePadUp(0)) pos.vy++;
+	else if (gamePadUp(0)) pos.vy++;
+	else if (fflags&2 && frame&1 && (pos.vy+flappyPos.vy)<8) pos.vy++;
+	
 	if ((pos.vy+flappyPos.vy)>32) {
 		pos.vy=-flappyPos.vy+32;
-	}else if ((pos.vy+flappyPos.vy)<-32) {
-		pos.vy=-flappyPos.vy-32;
+	}else if ((pos.vy+flappyPos.vy)<-20) {
+		pos.vy=-flappyPos.vy-20;
 	}
 	if (pos.vy<-420) pos.vy=-420;
 	if (pos.vy>436) pos.vy=436;
@@ -78,7 +80,6 @@ void printGame() {
 	
 	//World Geometry calculations
 	RotMatrix(&ang, &m); //Get a rotation matrix from the vector
-	TransMatrix(&m, &pos);	//Sets the translation
 	TransMatrix(&m, &pos);	//Sets the translation
 	SetRotMatrix(&m);
 	SetTransMatrix(&m);
@@ -127,7 +128,7 @@ void printGame() {
 	RotTransPers4(&flappyVertex[1][0],&flappyVertex[1][1],&flappyVertex[1][2],&flappyVertex[1][3],(long*)&fpp->x0,(long*)&fpp->x1,(long*)&fpp->x2,(long*)&fpp->x3,&dmy,&flg);
 	DrawPrim(fpp);	//blocking
 	
-	DrawPrim(&tp);	//blocking
+	DrawPrim(&tp[0]);	//blocking
 	
 	//Coins
 	scoinp=&scoin[(frame>>2)&7];
@@ -149,6 +150,7 @@ void printGame() {
 	}
 	
 	//HUD
+	if (!lvlnum) return;
 	scoin[1].x0=300; scoin[1].y0=9;
 	DrawPrim(&scoin[1]);
 	if (remCoins) printNum(287,8,remCoins);
@@ -164,27 +166,28 @@ void checkPauseAndAlert() {
 		DrawPrim(&alertSprt);
 		print(96,90,0,0,0,0,alertmsg);
 		nextFrameFlipBuff();
-		while (gamePad[0].ex) VSync(0);
-		while (!gamePad[0].ex) VSync(0);
+		while (gamePad[0].ex && gamePad[0].start) VSync(0);
+		while (!gamePad[0].ex || !gamePad[0].start) VSync(0);
 		SpuSetCommonCDVolume(0x3fff, 0x3fff);
 		alertmsg=0;
-	} else if (!gamePad[0].start) {
+	} else if (lvlnum && !gamePad[0].start) {
 		static u_char selection;
 		SpuSetCommonCDVolume(0x0fff, 0x0fff);
 		PLAYSFX(SFX_SWSH);
-		fullScreenBlack.r0=128; fullScreenBlack.g0=16; fullScreenBlack.b0=0;
+		fullScreenBlack.r0=0; fullScreenBlack.g0=0; fullScreenBlack.b0=64;
 		fflags|=32; selection=0;
 		while (!gamePad[0].start) VSync(0);
 		while (gamePad[0].start && gamePad[0].ex) {
 			static struct s_gamePad lastGamePad;
+			DrawPrim(&tp[1]);
 			DrawPrim(&fullScreenBlack);
-			PRINTFMT(8,224,0,255,0,255,"<< %s >>",songnames[audioChannel]);
-			print(128,104,0,255,255,1,"Continue\n\nExit level");
+			PRINTFMT(8,224,128,255,255,0,"<< %s >>",songnames[audioChannel]);
+			print(128,104,192,255,128,0,"Continue\n\nExit level");
 			if ((!gamePad[0].down && lastGamePad.down) || (!gamePad[0].up && lastGamePad.up)) {selection=(selection+1)&1; PLAYSFX(SFX_WING);}
 			switch (selection)  {
-				case 0: print(114+(rsin(VSync(-1)<<7)>>10),104,255,255,0,1,">");
+				case 0: print(114+(rsin(VSync(-1)<<7)>>10),104,128,128,255,0,">");
 				break;
-				case 1: print(114+(rsin(VSync(-1)<<7)>>10),120,255,255,0,1,">");
+				case 1: print(114+(rsin(VSync(-1)<<7)>>10),120,128,128,255,0,">");
 				break;
 			}
 			if (!gamePad[0].right && lastGamePad.right) {
@@ -206,7 +209,7 @@ void checkPauseAndAlert() {
 	}
 }
 
-void fdie(u_char lvlnum) {
+void fdie() {
 	u_char i,j;
 	flappyAng.vz=1024;
 	PLAYSFX(SFX_HIT);
@@ -299,7 +302,8 @@ void updatePlayer() {
 	}
 }
 
-u_char startLevel(u_char lvlnum) {
+u_char startLevel(u_char lvlnumparam) {
+	lvlnum=lvlnumparam;
 	sprintf(stringholder,"\\BKG%d.TIM;1",lvlnum);
 	loadTimCD(stringholder);
 	sprintf(stringholder,"\\LVL%d.LVL;1",lvlnum);
@@ -313,11 +317,9 @@ u_char startLevel(u_char lvlnum) {
 		if (!(fflags&16)) updateGameWorldPos();
 		printGame();
 		levelCustomCode[lvlnum].onFrame();
-		if (fflags&8) {fdie(lvlnum); continue;}
+		if (fflags&8) {fdie(); continue;}
 		checkPauseAndAlert();
-		PRINTFMT(8,8,64,64,64,1,"Fla pos: %d,%d [%d,%d] + %d,%d\nWld pos: %d,%d\nfflags: %02x vline: %d flost: %d",flappyPos.vx,flappyPos.vy,flappyPos.vx>>4,flappyPos.vy>>4,flappyPos.vx&15,flappyPos.vy&15,pos.vx,pos.vy,fflags,VSync(1),VSync(-1)-frame);
-		FntFlush(-1);
-		DrawSync(0);
+		//PRINTFMT(8,8,255,255,255,0,"Fla pos: %d,%d [%d,%d] + %d,%d\nWld pos: %d,%d\nfflags: %02x vline: %d flost: %d",flappyPos.vx,flappyPos.vy,flappyPos.vx>>4,flappyPos.vy>>4,flappyPos.vx&15,flappyPos.vy&15,pos.vx,pos.vy,fflags,VSync(1),VSync(-1)-frame);
 		frame++;
 	}
 	unLoadLvl();

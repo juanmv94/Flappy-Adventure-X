@@ -35,7 +35,7 @@ void introScreen(u_char num) {
 	loadTimCD(filename);
 	PLAYSFX(SFX_ABS1);
 	for (i=63;i>0;i--) {
-		DrawPrim(&tp);
+		DrawPrim(&tp[0]);
 		MoveImage(&introRect,0,cdb->draw.clip.y);
 		fullScreenBlack.r0=i<<2; fullScreenBlack.g0=i<<2; fullScreenBlack.b0=i<<2;
 		DrawPrim(&fullScreenBlack);
@@ -92,16 +92,16 @@ void printFEModel(u_char *p, short dx, short dy) {
 			memcpy(&f4.r0,p,3);
 			memcpy(&x[1],p+3,6);memcpy(&x[0],p+9,6);memcpy(&x[2],p+15,6);memcpy(&x[3],p+21,6);
 			for (j=0;j<4;j++) {x[j].vx+=dx; x[j].vy+=dy; x[j].vz+=persp;}
-			TransRotPers(&x[0],(long*)&f4.x0,&dmy,&flg); TransRotPers(&x[1],(long*)&f4.x1,&dmy,&flg); TransRotPers(&x[2],(long*)&f4.x2,&dmy,&flg); TransRotPers(&x[3],(long*)&f4.x3,&dmy,&flg);
-			if (flags&0x02 || NormalClip(*(long*)&f4.x0,*(long*)&f4.x1,*(long*)&f4.x2)>0) DrawPrim(&f4);
+			RotTransPers4(&x[0],&x[1],&x[2],&x[3],(long*)&f4.x0,(long*)&f4.x1,(long*)&f4.x2,(long*)&f4.x3,&dmy,&flg);
+			if (flags&0x02 || NormalClip(*(long*)&f4.x0,*(long*)&f4.x1,*(long*)&f4.x2)>=0) DrawPrim(&f4);
 			p+=27;
 		} else {	//triangle
 			SVECTOR x[3];
 			memcpy(&f3.r0,p,3);
 			memcpy(&x[1],p+3,6);memcpy(&x[0],p+9,6);memcpy(&x[2],p+15,6);
 			for (j=0;j<3;j++) {x[j].vx+=dx; x[j].vy+=dy; x[j].vz+=persp;}
-			TransRotPers(&x[0],(long*)&f3.x0,&dmy,&flg); TransRotPers(&x[1],(long*)&f3.x1,&dmy,&flg); TransRotPers(&x[2],(long*)&f3.x2,&dmy,&flg);
-			if (flags&0x02 || NormalClip(*(long*)&f3.x0,*(long*)&f3.x1,*(long*)&f3.x2)>0) DrawPrim(&f3);
+			RotTransPers3(&x[0],&x[1],&x[2],(long*)&f3.x0,(long*)&f3.x1,(long*)&f3.x2,&dmy,&flg);
+			if (flags&0x02 || NormalClip(*(long*)&f3.x0,*(long*)&f3.x1,*(long*)&f3.x2)>=0) DrawPrim(&f3);
 			p+=21;
 		}
 	}
@@ -116,16 +116,16 @@ void printFEModelInvertedY(u_char *p, short dx, short dy) {
 			memcpy(&f4.r0,p,3);
 			memcpy(&x[1],p+3,6);memcpy(&x[0],p+9,6);memcpy(&x[2],p+15,6);memcpy(&x[3],p+21,6);
 			for (j=0;j<4;j++) {x[j].vx+=dx; x[j].vy=dy-x[j].vy; x[j].vz+=persp;}
-			TransRotPers(&x[0],(long*)&f4.x0,&dmy,&flg); TransRotPers(&x[1],(long*)&f4.x1,&dmy,&flg); TransRotPers(&x[2],(long*)&f4.x2,&dmy,&flg); TransRotPers(&x[3],(long*)&f4.x3,&dmy,&flg);
-			if (flags&0x02 || NormalClip(*(long*)&f4.x0,*(long*)&f4.x2,*(long*)&f4.x1)>0) DrawPrim(&f4);
+			RotTransPers4(&x[0],&x[1],&x[2],&x[3],(long*)&f4.x0,(long*)&f4.x1,(long*)&f4.x2,(long*)&f4.x3,&dmy,&flg);
+			if (flags&0x02 || NormalClip(*(long*)&f4.x0,*(long*)&f4.x2,*(long*)&f4.x1)>=0) DrawPrim(&f4);
 			p+=27;
 		} else {	//triangle
 			SVECTOR x[3];
 			memcpy(&f3.r0,p,3);
 			memcpy(&x[1],p+3,6);memcpy(&x[0],p+9,6);memcpy(&x[2],p+15,6);
 			for (j=0;j<3;j++) {x[j].vx+=dx; x[j].vy=dy-x[j].vy; x[j].vz+=persp;}
-			TransRotPers(&x[0],(long*)&f3.x0,&dmy,&flg); TransRotPers(&x[1],(long*)&f3.x1,&dmy,&flg); TransRotPers(&x[2],(long*)&f3.x2,&dmy,&flg);
-			if (flags&0x02 || NormalClip(*(long*)&f3.x0,*(long*)&f3.x2,*(long*)&f3.x1)>0) DrawPrim(&f3);
+			RotTransPers3(&x[0],&x[1],&x[2],(long*)&f3.x0,(long*)&f3.x1,(long*)&f3.x2,&dmy,&flg);
+			if (flags&0x02 || NormalClip(*(long*)&f3.x0,*(long*)&f3.x2,*(long*)&f3.x1)>=0) DrawPrim(&f3);
 			p+=21;
 		}
 	}

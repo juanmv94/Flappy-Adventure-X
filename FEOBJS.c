@@ -9,18 +9,17 @@ void alert(struct FEObject* feo) {
 }
 
 void yflag(struct FEObject* feo) {
-	static u_char wasPreviously=0;
 	printFEModel(model_yflag, feo->dx, feo->dy);
 	if (abs(feo->dx-flappyPos.vx)<10 && (feo->dy-flappyPos.vy)<32 && (feo->dy-flappyPos.vy)>0) {
-		if (!wasPreviously && (feo->dx-flappyPos.vx)) {
+		if (!feo->data[0] && (feo->dx-flappyPos.vx)) {
 			PLAYSFX(SFX_CHCK);
 			memcpy(lastCoinCollected,coinCollected,ncoins);
 			lastRemCoins=remCoins;
 			spawnpoint[0]=feo->dx>>4; spawnpoint[1]=(feo->dy>>4)-1;
 		}
-		wasPreviously=1;
+		feo->data[0]=1;
 	} else {
-		wasPreviously=0;
+		feo->data[0]=0;
 	}
 }
 
@@ -140,6 +139,89 @@ void block(struct FEObject* feo) {
 	}
 }
 
+void hotfloor(struct FEObject* feo) {
+	SVECTOR vertex[4]={{feo->dx,feo->dy,0},{feo->dx+16,feo->dy,0},{feo->dx,feo->dy,persp+16},{feo->dx+16,feo->dy,persp+16}};
+	short val=rsin((frame<<feo->data[0])+(feo->data[1]<<4))>>5;
+	f4.r0=(val==128)?255:128+val; f4.g0=0; f4.b0=0;
+	RotTransPers4(&vertex[0],&vertex[1],&vertex[2],&vertex[3],(long*)&f4.x0,(long*)&f4.x1,(long*)&f4.x2,(long*)&f4.x3,&dmy,&flg);
+	if (f4.y0>=f4.y2) DrawPrim(&f4);
+	if ((feo->dy-flappyPos.vy)<8 && (feo->dy-flappyPos.vy)>0 && (feo->dx-flappyPos.vx)<0 && (feo->dx-flappyPos.vx)>-16) {
+		if (val>96) fflags|=8;
+	}
+}
+
+void sign(struct FEObject* feo) {
+	SVECTOR vertex[4]={{feo->dx-6,feo->dy-21,persp+14},{feo->dx-6,feo->dy-9,persp+14},{feo->dx+6,feo->dy-21,persp+8},{feo->dx+6,feo->dy-9,persp+8}};
+	POLY_FT4 sigt={u0:70,v0:240,u1:70,v1:255,u2:85,v2:240,u3:85,v3:255,tpage:tpages[0]};
+	switch (feo->data[0]) {
+		case 0:
+		RotTransPers4(&vertex[3],&vertex[1],&vertex[2],&vertex[0],(long*)&sigt.x0,(long*)&sigt.x1,(long*)&sigt.x2,(long*)&sigt.x3,&dmy,&flg);
+		break;
+		case 1: //Left
+		RotTransPers4(&vertex[1],&vertex[3],&vertex[0],&vertex[2],(long*)&sigt.x0,(long*)&sigt.x1,(long*)&sigt.x2,(long*)&sigt.x3,&dmy,&flg);
+		break;
+		case 2:	//Up
+		RotTransPers4(&vertex[0],&vertex[1],&vertex[2],&vertex[3],(long*)&sigt.x0,(long*)&sigt.x1,(long*)&sigt.x2,(long*)&sigt.x3,&dmy,&flg);
+		break;
+		case 3:	//Down
+		RotTransPers4(&vertex[1],&vertex[0],&vertex[3],&vertex[2],(long*)&sigt.x0,(long*)&sigt.x1,(long*)&sigt.x2,(long*)&sigt.x3,&dmy,&flg);
+		break;
+	}
+	printFEModel(model_sign, feo->dx, feo->dy);
+	SetPolyFT4(&sigt); setShadeTex(&sigt,1); DrawPrim(&sigt);
+}
+
+void memcard(struct FEObject* feo) {
+	static MATRIX m;
+	static u_char timein=0;
+	static char* msg;
+	SVECTOR mcardang={frame<<4,frame<<4,frame<<4};	//angle (512=45d)
+	VECTOR mcardpos={pos.vx+feo->dx,pos.vy+feo->dy,persp+32};
+	RotMatrix(&mcardang, &m); //Get a rotation matrix from the vector
+	TransMatrix(&m, &mcardpos);	//Sets the translation
+	SetRotMatrix(&m);
+	SetTransMatrix(&m);
+	printFEModel(model_memcard, 0, 0);
+	RotMatrix(&ang, &m); //Get a rotation matrix from the vector
+	TransMatrix(&m, &pos);	//Sets the translation
+	SetRotMatrix(&m);
+	SetTransMatrix(&m);
+	if ((feo->dy-flappyPos.vy)<32 && (feo->dy-flappyPos.vy)>-24 && (feo->dx-flappyPos.vx)<24 && (feo->dx-flappyPos.vx)>-32) {	//collision
+		TILE tile={x0:8,y0:8,w:timein<<3,h:timein<<1,r0:timein<<3,g0:timein<<3,b0:timein<<2};
+		SetTile(&tile); SetSemiTrans(&tile,1);
+		DrawPrim(&tp[2]);
+		DrawPrim(&tile);
+		DrawPrim(&tp[0]);
+		print(12,12,timein<<3,timein<<3,timein<<3,1,msg);
+		if (timein<15) timein++;
+	} else {
+		timein=0;
+		msg="Save game\n\n        >START";
+	}
+	
+}
+
+void lvlplatf(struct FEObject* feo) {
+	static u_char timeinarr[3]={0};	//3 levels
+	static char *levelNames[]={"Tedelche","The shortcut\n(Hellin)","Ice world\n(Riopar)","Feria GrandPrix\n(Albacete)"};	//3 levels
+	printFEModel(model_lvlplatf, feo->dx, feo->dy);
+	if (abs(feo->dx-flappyPos.vx)<12 && (feo->dy-flappyPos.vy)<12) {	//collision
+		u_char timein=timeinarr[feo->data[0]];
+		TILE tile={x0:8,y0:8,w:timein<<3,h:timein<<2,r0:timein<<3,g0:timein<<1,b0:timein<<3};
+		SetTile(&tile); SetSemiTrans(&tile,1);
+		DrawPrim(&tp[2]);
+		DrawPrim(&tile);
+		DrawPrim(&tp[0]);
+		PRINTFMT(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL %d:\n\n%s\n\n\n         >START",feo->data[0],levelNames[feo->data[0]]);
+		if (timein<16) timeinarr[feo->data[0]]++;
+		fflags|=4;
+		flappyPos.vy=feo->dy-11;
+		if (!gamePad[0].start) levelExitCode=feo->data[0];
+	} else {
+		timeinarr[feo->data[0]]=0;
+	}
+}
+
 typedef void (*FEFunc)(struct FEObject*);
 
-FEFunc FEFuncArray[7]= {&alert,&yflag,&platform,&pipe,&button,&door,&block};
+FEFunc FEFuncArray[11]= {&alert,&yflag,&platform,&pipe,&button,&door,&block,&hotfloor,&sign,&memcard,&lvlplatf};

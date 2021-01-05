@@ -22,7 +22,6 @@ void printStartMsg(char* msg) {
 
 int main() {
 	int i,j;
-	u_short tpages[1]={GetTPage(2,2,768,0)};
 	
 	ResetGraph(0);
 	SetVideoMode(1);	//PAL
@@ -40,7 +39,7 @@ int main() {
 	db[0].disp.screen.y=32; db[1].disp.screen.y=32;
 	nextFrameFlipBuff();					 
 	for (i=0;i<64;i++) {
-		printStartMsg("Flappy Adventure X");
+		printStartMsg("Juanmv94 presents: Flappy Adventure X");
 	}
 	PadInitDirect((u_char *)&gamePad[0], (u_char *)&gamePad[1]);
 	printStartMsg("Init audio");
@@ -48,11 +47,12 @@ int main() {
 	printStartMsg("Load Textures");
 	loadTimCD("\\T1.TIM;1");
 	printStartMsg("Setting polys");
+	tpages[0]=GetTPage(2,2,768,0); tpages[1]=GetTPage(2,0,768,0); tpages[2]=GetTPage(2,1,768,0);
+	for (i=0;i<3;i++) SetDrawTPage(&tp[i],0,0,tpages[i]);							//Sprites TPAGE
 	for (i=0;i<3;i++) {p[i].tpage=tpages[0]; setPolyFT4(&p[i]); setSprt(&s[i]);}	//World polygons
 	for (i=0;i<8;i++) {setSprt16(&scoin[i]); setShadeTex(&scoin[i],1);}				//Coin polygons
 	setSprt(&tik); setShadeTex(&tik,1);												//tik
 	for (i=0;i<4;i++) {fp[i].tpage=tpages[0]; setPolyFT4(&fp[i]);}					//Flappy polygons
-	SetDrawTPage(&tp,0,0,tpages[0]);												//Sprites TPAGE
 	SetTile(&fullScreenBlack); SetSemiTrans(&fullScreenBlack,1);					//FullScreenBlack
 	setSprt(&alertSprt); setShadeTex(&alertSprt,1);									//AlertSprt
 	setSprt8(&charSprt); setSprt(&numSprt);	setShadeTex(&numSprt,1);				//AlertSprt, text, nums
@@ -77,7 +77,7 @@ int main() {
 	PlayStr(320,240,"\\INTRO.STR;1",2425);
 	while (1) {
 		startLevel(0);
-		startLevel(1);
+		startLevel(levelExitCode);
 	}
 	return 0;
 }
