@@ -4,13 +4,17 @@ struct LvlFuncs {
 	LvlFunc onStart;
 	LvlFunc onFrame;
 	LvlFunc onDie;
+	LvlFunc onEnd;
 };
 
 void noLevFunc() {
 	//Nothing here
 }
 
-//Level 0
+void stopTtac() {
+	STOPSFX(SFX_TTAC);
+}
+
 SPRT_16 ball={r0:128, g0:128, b0:128, u0:54, v0:240};
 SVECTOR ballpos;
 signed char ballvel[2];
@@ -189,6 +193,9 @@ void level2_onFrame() {
 				l2_correctPassMsgShown=1;		
 			}
 		}
+		//Sine wave coins
+		for (i=70*2+1;i<81*2;i+=2) dcoin[i]=400+(rsin((frame<<5)+(i<<8))>>7);
+		
 	} else {	//final challenge
 		if (flappyPos.vx<-490) levelExitCode=2;
 		FEObjects[12].data[0]=0;	 //close door
@@ -223,7 +230,6 @@ void level2_onFrame() {
 			memcpy(&lastGamePad,&gamePad[0],sizeof(struct s_gamePad));
 		}
 	}
-	
 }
 
 void level2_onDie() {
@@ -253,7 +259,7 @@ void level3_onFrame() {
 	printNum(300,210,--l3_timer/50+1);
 	if (!l3_timer) fflags|=8;
 	if (fflags&8) {STOPSFX(SFX_TTAC); return;}
-	else if (l3_timer==250) PLAYSFX(SFX_TTAC);
+	if (l3_timer==250) PLAYSFX(SFX_TTAC);
 	
 	if (FEObjects[8].data[0]) {							//checkpoint
 		FEObjects[37].data[0]=0;						//deactivate button->door
@@ -291,9 +297,14 @@ void level3_onDie() {
 	FEObjects[29].data[0]=0;						//deactivate button->door
 }
 
+void level4_onFrame() {
+	if (flappyPos.vx<-300 && flappyPos.vy<60) levelExitCode=2;
+}
+
 struct LvlFuncs levelCustomCode[]= {
-	{&noLevFunc,&noLevFunc,&noLevFunc},
-	{&level1_onStart,&level1_onFrame,&level1_onDie},
-	{&level2_onStart,&level2_onFrame,&level2_onDie},
-	{&level3_onStart,&level3_onFrame,&level3_onDie}
+	{&noLevFunc,&noLevFunc,&noLevFunc,&noLevFunc},
+	{&level1_onStart,&level1_onFrame,&level1_onDie,&stopTtac},
+	{&level2_onStart,&level2_onFrame,&level2_onDie,&noLevFunc},
+	{&level3_onStart,&level3_onFrame,&level3_onDie,&stopTtac},
+	{&noLevFunc,&level4_onFrame,&noLevFunc,&noLevFunc}
 };

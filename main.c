@@ -68,16 +68,19 @@ int main() {
 		c[0].vz=0; c[1].vz=persp+16;
 	}
 	printStartMsg("Reading Memory Card 0");
-	//PadStopCom();	//Was not started yet
+	MemCardInit(0);
 	loadMemCard();
+	VSync(0);
 	printStartMsg("Starting GamePad communication");
 	PadStartCom();
 	printStartMsg("Let's go!");
 	introScreen(1); introScreen(2); introScreen(3);
 	PlayStr(320,240,"\\INTRO.STR;1",2425);
 	while (1) {
-		startLevel(0);
-		startLevel(levelExitCode);
+		u_char lvl=startLevel(0);
+		u_char exitc=startLevel(lvl);
+		u_char collected=ncoins-remCoins;
+		if (exitc==2 && mCardData.saveData[lvl]<collected) mCardData.saveData[lvl]=collected;
 	}
 	return 0;
 }

@@ -173,7 +173,7 @@ void sign(struct FEObject* feo) {
 
 void memcard(struct FEObject* feo) {
 	static MATRIX m;
-	static u_char timein=0;
+	static u_char timein=0,saved=0;
 	static char* msg;
 	SVECTOR mcardang={frame<<4,frame<<4,frame<<4};	//angle (512=45d)
 	VECTOR mcardpos={pos.vx+feo->dx,pos.vy+feo->dy,persp+32};
@@ -186,24 +186,37 @@ void memcard(struct FEObject* feo) {
 	TransMatrix(&m, &pos);	//Sets the translation
 	SetRotMatrix(&m);
 	SetTransMatrix(&m);
+	if (saved==1) {
+		msg=saveMemCard();
+		VSync(0);
+		PadStartCom();
+		saved++;
+	}
 	if ((feo->dy-flappyPos.vy)<32 && (feo->dy-flappyPos.vy)>-24 && (feo->dx-flappyPos.vx)<24 && (feo->dx-flappyPos.vx)>-32) {	//collision
-		TILE tile={x0:8,y0:8,w:timein<<3,h:timein<<1,r0:timein<<3,g0:timein<<3,b0:timein<<2};
+		TILE tile={x0:8,y0:8,w:timein*11,h:timein<<1,r0:timein<<3,g0:timein<<3,b0:timein<<2};
 		SetTile(&tile); SetSemiTrans(&tile,1);
 		DrawPrim(&tp[2]);
 		DrawPrim(&tile);
 		DrawPrim(&tp[0]);
-		print(12,12,timein<<3,timein<<3,timein<<3,1,msg);
-		if (timein<15) timein++;
+		if (timein<14) timein++;
+		if (!gamePad[0].start && !saved) {
+			saved=1;
+			PadStopCom();
+			print(10,10,timein<<3,timein<<3,timein<<3,1,"saving...");
+		} else {
+			print(10,10,timein<<3,timein<<3,timein<<3,1,msg);
+		}
 	} else {
-		timein=0;
-		msg="Save game\n\n        >START";
+		timein=0; saved=0;
+		msg="save game\n\n             >START";
 	}
-	
 }
 
 void lvlplatf(struct FEObject* feo) {
-	static u_char timeinarr[3]={0};	//3 levels
-	static char *levelNames[]={"Tedelche","The shortcut\n(Hellin)","Ice world\n(Riopar)","Feria GrandPrix\n(Albacete)"};	//3 levels
+	static u_char timeinarr[6]={0};	//6 levels
+	static char *levelNames[]={"Tedelche","The shortcut\n(Hellin)","Ice world\n(Riopar)","Feria GrandPrix\n(Albacete)",
+			"Angry Birds\n(Ontur)","not implemented\n","not implemented\n"};	//6 levels
+	static u_char totalCoins[]={0,89,81,9,31,0,0};	//6 levels
 	printFEModel(model_lvlplatf, feo->dx, feo->dy);
 	if (abs(feo->dx-flappyPos.vx)<12 && (feo->dy-flappyPos.vy)<12) {	//collision
 		u_char timein=timeinarr[feo->data[0]];
@@ -212,7 +225,7 @@ void lvlplatf(struct FEObject* feo) {
 		DrawPrim(&tp[2]);
 		DrawPrim(&tile);
 		DrawPrim(&tp[0]);
-		PRINTFMT(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL %d:\n\n%s\n\n\n         >START",feo->data[0],levelNames[feo->data[0]]);
+		PRINTFMT(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL %d:\n\n%s\n\n%d/%d\n         >START",feo->data[0],levelNames[feo->data[0]],mCardData.saveData[feo->data[0]],totalCoins[feo->data[0]]);
 		if (timein<16) timeinarr[feo->data[0]]++;
 		fflags|=4;
 		flappyPos.vy=feo->dy-11;
@@ -222,6 +235,26 @@ void lvlplatf(struct FEObject* feo) {
 	}
 }
 
+void angrybird(struct FEObject* feo) {
+	SPRT agb={w:44, h:40, u0:(feo->data[0])?168:212, v0:216};
+	SVECTOR v={feo->dx,feo->dy,persp+4};
+	short dify=feo->dy-flappyPos.vy;
+	RotTransPers(&v,(long*)&agb.x0,&dmy,&flg);
+	agb.x0-=22; agb.y0-=40;
+	SetSprt(&agb); setShadeTex(&agb,1);
+	DrawPrim(&agb);
+	if (dify>0 && dify<32 && abs(feo->dx-flappyPos.vx)<(32-dify>>1)) fflags|=8;		//collision (triangle)
+	if (frame&feo->data[1] && !(fflags&40)) {																	//Move
+		if (feo->data[0]) {
+			feo->dx--;
+			if (b((feo->dy>>4)+31,(feo->dx-12>>4)+32)) feo->data[0]=0;
+		} else {
+			feo->dx++;
+			if (b((feo->dy>>4)+31,(feo->dx+12>>4)+32)) feo->data[0]=1;
+		}
+	}
+}
+
 typedef void (*FEFunc)(struct FEObject*);
 
-FEFunc FEFuncArray[11]= {&alert,&yflag,&platform,&pipe,&button,&door,&block,&hotfloor,&sign,&memcard,&lvlplatf};
+FEFunc FEFuncArray[12]= {&alert,&yflag,&platform,&pipe,&button,&door,&block,&hotfloor,&sign,&memcard,&lvlplatf,&angrybird};

@@ -19,7 +19,8 @@ struct MCHeader {
 	char CLUT[32];	//16 color
 	//128 bytes to here
 	char icons[128*3];	//3x(16x16 4BPP)
-	char saveData[128*60];
+	//char saveData[128*60];
+	char saveData[128];		//128 bytes is enought for FADVX
 };
 
 struct MCHeader mCardData={
@@ -35,36 +36,60 @@ struct MCHeader mCardData={
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x55, 0x55, 0x05, 0x00, 0x00, 0x00, 0x50, 0x25, 0x22, 0x75, 0x57, 0x00, 0x00, 0x00, 0x25, 0x62, 0x56, 0x77, 0x77, 0x05, 0x00, 0x50, 0x62, 0x66, 0x56, 0x74, 0x57, 0x57, 0x00, 0x65, 0x66, 0x66, 0x56, 0x74, 0x57, 0x57, 0x00, 0x65, 0x66, 0x66, 0x66, 0x45, 0x77, 0x57, 0x00, 
 				0x55, 0x55, 0x65, 0x66, 0x56, 0x55, 0x55, 0x05, 0x72, 0x77, 0x52, 0x66, 0x35, 0x33, 0x33, 0x53, 0x77, 0x77, 0x15, 0x51, 0x53, 0x55, 0x55, 0x05, 0x77, 0x52, 0x11, 0x11, 0x35, 0x33, 0x33, 0x05, 0x55, 0x55, 0x11, 0x11, 0x51, 0x55, 0x55, 0x00, 0x00, 0x00, 0x55, 0x55, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 		},
-		saveData: "TODO"
+		saveData: {0}
 	};
-	
+
 void loadMemCard() {
 	long cmds;
 	long result;
-	MemCardInit(0);
+	char* msg;
+	MemCardStart();
+	MemCardSync(0, &cmds, &result);
+	MemCardAccept(0);
+	MemCardSync(0, &cmds, &result);
+	MemCardReadFile(0,"FLADVX",(u_long*)mCardData.saveData,128*4,128);
+	MemCardSync(0, &cmds, &result);
+	switch (result) {
+		case McErrNone: msg="game file loaded!"; break;
+		case McErrCardNotExist: msg="card not connected"; break;
+		case McErrCardInvalid: msg="communication error"; break;
+		case McErrNewCard: msg="new card (card swapped)"; break;
+		case McErrFileNotExist: msg="game file not found"; break;
+		default: msg="unknown error";
+	}
+	printf("%s\n",msg);
+	MemCardStop();
+}
+
+char* saveMemCard() {
+	long cmds;
+	long result;
+	char* msg;
 	MemCardStart();
 	MemCardSync(0, &cmds, &result);
 	result=MemCardCreateFile(0,"FLADVX",1);
 	switch (result) {
-		case McErrNone: printf("file created\n"); break;
-		case McErrCardNotExist: printf("card not connected\n"); break;
-		case McErrCardInvalid: printf("communication error\n"); break;
-		case McErrNotFormat: printf("card not formatted\n"); break;
+		case McErrNone: printf("game file created\n"); break;
+		case McErrCardNotExist: msg="card not connected"; break;
+		case McErrCardInvalid: msg="communication error"; break;
+		case McErrNotFormat: msg="card not formatted"; break;
 		case McErrAlreadyExist: printf("file already exists\n"); break;
-		case McErrBlockFull: printf("memcard is full\n"); break;
-		default: printf("unknown error\n");
+		case McErrBlockFull: msg="memcard is full"; break;
+		default: msg="unknown error";
 	}
-	if (result==McErrNone) {
-		MemCardWriteFile(0,"FLADVX",(u_long*)&mCardData,0,128*4);
+	if (result==McErrNone || result==McErrAlreadyExist) {
+		if (result==McErrNone) MemCardWriteFile(0,"FLADVX",(u_long*)&mCardData,0,128*5);
+		else MemCardWriteFile(0,"FLADVX",(u_long*)mCardData.saveData,128*4,128);
 		MemCardSync(0, &cmds, &result);
 		switch (result) {
-			case McErrNone: printf("write card OK\n"); break;
-			case McErrCardNotExist: printf("card not connected\n"); break;
-			case McErrCardInvalid: printf("communication error\n"); break;
-			case McErrNewCard: printf("new card (card swapped)\n"); break;
-			case McErrFileNotExist: printf("file not found\n"); break;
-			default: printf("unknown error\n");
+			case McErrNone: msg="game saved!"; break;
+			case McErrCardNotExist: msg="card not connected"; break;
+			case McErrCardInvalid: msg="communication error"; break;
+			case McErrNewCard: msg="new card (card swapped)"; break;
+			case McErrFileNotExist: msg="created file not found"; break;
+			default: msg="unknown error";
 		}
 	}
 	MemCardStop();
+	return msg;
 }

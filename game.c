@@ -322,6 +322,7 @@ u_char startLevel(u_char lvlnumparam) {
 		//PRINTFMT(8,8,255,255,255,0,"Fla pos: %d,%d [%d,%d] + %d,%d\nWld pos: %d,%d\nfflags: %02x vline: %d flost: %d",flappyPos.vx,flappyPos.vy,flappyPos.vx>>4,flappyPos.vy>>4,flappyPos.vx&15,flappyPos.vy&15,pos.vx,pos.vy,fflags,VSync(1),VSync(-1)-frame);
 		frame++;
 	}
+	levelCustomCode[lvlnum].onEnd();
 	unLoadLvl();
 	Sound_CD_XAStop();
 	return levelExitCode;

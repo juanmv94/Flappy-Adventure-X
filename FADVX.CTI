@@ -112,7 +112,7 @@ Disc CDROMXA_PSX ;the disk format
 					
 					File BKG0.TIM
 						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG0.TIM
+						Source C:\projects\FlappyX\cdrom\BKG\BKG0.TIM
 					EndFile
 					
 					File LVL0.LVL
@@ -122,7 +122,7 @@ Disc CDROMXA_PSX ;the disk format
 					
 					File BKG1.TIM
 						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG1.TIM
+						Source C:\projects\FlappyX\cdrom\BKG\BKG1.TIM
 					EndFile
 					
 					File LVL1.LVL
@@ -132,7 +132,7 @@ Disc CDROMXA_PSX ;the disk format
 					
 					File BKG2.TIM
 						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG2.TIM
+						Source C:\projects\FlappyX\cdrom\BKG\BKG2.TIM
 					EndFile
 					
 					File LVL2.LVL
@@ -142,12 +142,22 @@ Disc CDROMXA_PSX ;the disk format
 					
 					File BKG3.TIM
 						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG3.TIM
+						Source C:\projects\FlappyX\cdrom\BKG\BKG3.TIM
 					EndFile
 					
 					File LVL3.LVL
 						XAFileAttributes Form1 Data
 						Source C:\projects\FlappyX\cdrom\LVL\LVL3.LVL
+					EndFile
+					
+					File BKG4.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\BKG\BKG4.TIM
+					EndFile
+					
+					File LVL4.LVL
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\LVL\LVL4.LVL
 					EndFile
 					
 					File MUSIC1.XA
