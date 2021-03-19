@@ -133,8 +133,16 @@ void printGame() {
 	//Coins
 	scoinp=&scoin[(frame>>2)&7];
 	for (i=0;i<ncoins;i++) if (!coinCollected[i] && abs(dcoin[i<<1]+pos.vx)<128 && abs(dcoin[(i<<1)+1]+pos.vy)<128) {
+		if (fcheats&1 && abs(-dcoin[i<<1]+flappyPos.vx)<40 && abs(-dcoin[(i<<1)+1]+flappyPos.vy)<40) {	//coin cheat
+			short dx=-dcoin[i<<1]+flappyPos.vx;
+			short dy=-dcoin[(i<<1)+1]+flappyPos.vy;
+			if (dx>4) dcoin[i<<1]+=2;
+			else if (dx<-4) dcoin[i<<1]-=2;
+			if (dy>4) dcoin[(i<<1)+1]+=2;
+			else if (dy<-4) dcoin[(i<<1)+1]-=2;
+		}
 		if (abs(dcoin[i<<1]-flappyPos.vx+4)<10 && abs(dcoin[(i<<1)+1]-flappyPos.vy+4)<12) {	//coin touched?
-			PLAYSFX(SFX_COIN);
+			PLAYSFXCOIN();
 			coinCollected[i]=1; remCoins--;
 		} else {	//if not, just paint it
 			coinVertex.vx=dcoin[i<<1]; coinVertex.vy=dcoin[(i<<1)+1];
@@ -148,8 +156,10 @@ void printGame() {
 		RotTransPers(&x[i][j][0],(long*)&sp->x0,&dmy,&flg);
 		DrawPrim(sp);	//blocking
 	}
-	
-	//HUD
+	levelCustomCode[lvlnum].onFrame();
+}
+
+void printHUD() {
 	if (!lvlnum) return;
 	scoin[1].x0=300; scoin[1].y0=9;
 	DrawPrim(&scoin[1]);
@@ -159,20 +169,20 @@ void printGame() {
 
 void checkPauseAndAlert() {
 	if (alertmsg) {
-		SpuSetCommonCDVolume(0x0fff, 0x0fff);
+		SpuSetCommonCDVolume(cdvol>>2, cdvol>>2);
 		PLAYSFX(SFX_SWSH);
 		fullScreenBlack.r0=64; fullScreenBlack.g0=64; fullScreenBlack.b0=64;
 		DrawPrim(&fullScreenBlack);
 		DrawPrim(&alertSprt);
-		print(96,90,0,0,0,0,alertmsg);
+		print(94,90,0,0,0,0,alertmsg);
 		nextFrameFlipBuff();
 		while (gamePad[0].ex && gamePad[0].start) VSync(0);
 		while (!gamePad[0].ex || !gamePad[0].start) VSync(0);
-		SpuSetCommonCDVolume(0x3fff, 0x3fff);
+		SpuSetCommonCDVolume(cdvol, cdvol);
 		alertmsg=0;
 	} else if (lvlnum && !gamePad[0].start) {
 		static u_char selection;
-		SpuSetCommonCDVolume(0x0fff, 0x0fff);
+		SpuSetCommonCDVolume(cdvol>>2, cdvol>>2);
 		PLAYSFX(SFX_SWSH);
 		fullScreenBlack.r0=0; fullScreenBlack.g0=0; fullScreenBlack.b0=64;
 		fflags|=32; selection=0;
@@ -181,30 +191,33 @@ void checkPauseAndAlert() {
 			static struct s_gamePad lastGamePad;
 			DrawPrim(&tp[1]);
 			DrawPrim(&fullScreenBlack);
-			PRINTFMT(8,224,128,255,255,0,"<< %s >>",songnames[audioChannel]);
-			print(128,104,192,255,128,0,"Continue\n\nExit level");
+			printCd(audioChannel&3);
+			DrawPrim(&tp[1]);
+			PRINTFMT(136-strlen(songnames[audioChannel])*4,56,128,255,255,0,"<< %s >>",songnames[audioChannel]);
+			print(116,80,120+(rsin(VSync(-1)<<5)>>7),190+(rsin(VSync(-1)<<6)>>7),112+(rsin(VSync(-1)<<4)>>7),0,"   PAUSE\n-----------\n\n Continue\n\n Exit level");
 			if ((!gamePad[0].down && lastGamePad.down) || (!gamePad[0].up && lastGamePad.up)) {selection=(selection+1)&1; PLAYSFX(SFX_WING);}
 			switch (selection)  {
-				case 0: print(114+(rsin(VSync(-1)<<7)>>10),104,128,128,255,0,">");
+				case 0: print(110+(rsin(VSync(-1)<<7)>>10),104,128,128,255,0,">");
 				break;
-				case 1: print(114+(rsin(VSync(-1)<<7)>>10),120,128,128,255,0,">");
+				case 1: print(110+(rsin(VSync(-1)<<7)>>10),120,128,128,255,0,">");
 				break;
 			}
 			if (!gamePad[0].right && lastGamePad.right) {
-				audioChannel=(audioChannel+1)&7;
-				Sound_CD_XAChangeChannel(audioChannel);
+				PLAYSFX(SFX_WING);
+				Sound_CD_XAChangeChannel((audioChannel+1)&15);
 			} else if (!gamePad[0].left && lastGamePad.left) {
-				audioChannel=(audioChannel-1)&7;
-				Sound_CD_XAChangeChannel(audioChannel);
+				PLAYSFX(SFX_WING);
+				Sound_CD_XAChangeChannel((audioChannel-1)&15);
 			}
 			memcpy(&lastGamePad,&gamePad[0],sizeof(struct s_gamePad));
 			nextFrameFlipBuff();
 			printGame();
+			printHUD();
 		}
 		while (!gamePad[0].start || !gamePad[0].ex) VSync(0);
 		fflags&=0xDF;
 		PLAYSFX(SFX_SWSH);
-		SpuSetCommonCDVolume(0x3fff, 0x3fff);
+		SpuSetCommonCDVolume(cdvol, cdvol);
 		if (selection==1) levelExitCode=1;
 	}
 }
@@ -236,7 +249,7 @@ void fdie() {
 	flappyPos.vx=spawnpoint[0]<<4; flappyPos.vy=spawnpoint[1]<<4|9;
 	vacc=0; fflags=0; flappyAng.vy=0; pos.vy=999;
 	
-	memcpy(coinCollected,lastCoinCollected,ncoins); remCoins=lastRemCoins;
+	if (!(fcheats&1)) {memcpy(coinCollected,lastCoinCollected,ncoins); remCoins=lastRemCoins;}
 }
 
 
@@ -247,7 +260,8 @@ void updatePlayer() {
 	}
 	flappyPos.vy+=vacc>>3;
 	if ((flappyPos.vy&15)>8 && b((flappyPos.vy>>4)+33,(flappyPos.vx>>4)+32)) {	//ground
-		switch (b((flappyPos.vy>>4)+33,(flappyPos.vx>>4)+32)) {
+		u_char groundtype=(fcheats&4)?1:b((flappyPos.vy>>4)+33,(flappyPos.vx>>4)+32);
+		switch (groundtype) {
 			case 1:	//normal ground
 			if (gamePadLeft(0)) {flappyPos.vx--; fflags|=1;}
 			else if (gamePadRight(0)) {flappyPos.vx++; fflags&=0xFE;}
@@ -298,32 +312,38 @@ void updatePlayer() {
 		fflags&=0xFD;
 		if (vacc<23) vacc++;
 		flappyAng.vz=vacc<<4;
+		if (fcheats&2) {		//turn on air cheat
+			if (gamePadLeft(0)) fflags|=1;
+			else if (gamePadRight(0)) fflags&=0xFE;
+			flappyAng.vy=(fflags&1)?2048:0;
+		}
 		if (fflags&1) flappyPos.vx--; else flappyPos.vx++;
 	}
 }
 
 u_char startLevel(u_char lvlnumparam) {
 	lvlnum=lvlnumparam;
-	sprintf(stringholder,"\\BKG%d.TIM;1",lvlnum);
+	sprintf(stringholder,"\\GAME\\BKG%d.TIM;1",lvlnum);
 	loadTimCD(stringholder);
-	sprintf(stringholder,"\\LVL%d.LVL;1",lvlnum);
+	sprintf(stringholder,"\\GAME\\LVL%d.LVL;1",lvlnum);
 	loadLvlCD(stringholder);
 	levelCustomCode[lvlnum].onStart();
-	audioChannel=lvlnum;
-	Sound_CD_XAPlay("\\MUSIC1.XA;1", lvlnum);
+	Sound_CD_XAPlay("\\GAME\\MUSIC.XA;1", lvlnum+((VSync(-1)&1)<<3));
 	while (!levelExitCode) {
 		nextFrameFlipBuff();
 		updatePlayer();
 		if (!(fflags&16)) updateGameWorldPos();
 		printGame();
-		levelCustomCode[lvlnum].onFrame();
+		printHUD();
 		if (fflags&8) {fdie(); continue;}
 		checkPauseAndAlert();
 		//PRINTFMT(8,8,255,255,255,0,"Fla pos: %d,%d [%d,%d] + %d,%d\nWld pos: %d,%d\nfflags: %02x vline: %d flost: %d",flappyPos.vx,flappyPos.vy,flappyPos.vx>>4,flappyPos.vy>>4,flappyPos.vx&15,flappyPos.vy&15,pos.vx,pos.vy,fflags,VSync(1),VSync(-1)-frame);
+		if (!gamePad[0].square && cdvol>0x100) {cdvol-=0x100; SpuSetCommonCDVolume(cdvol, cdvol);}
+		else if (!gamePad[0].circle && cdvol<0x3fff) {cdvol+=0x100; SpuSetCommonCDVolume(cdvol, cdvol);}
 		frame++;
 	}
-	levelCustomCode[lvlnum].onEnd();
 	unLoadLvl();
 	Sound_CD_XAStop();
+	levelCustomCode[lvlnum].onEnd();
 	return levelExitCode;
 }

@@ -74,13 +74,34 @@ void print(u_short dx, u_short dy, u_char r0, u_char g0, u_char b0, u_char st, c
 
 void printNum(u_short dx, u_short dy,u_short num) {
 	numSprt.x0=dx; numSprt.y0=dy;
-	while(num!=0) {
+	if (num==0) {
+		numSprt.u0=136;
+		DrawPrim(&numSprt);
+	} else while(num!=0) {
 		u_short nl=num%10;
 		numSprt.u0=136+12*nl;
 		DrawPrim(&numSprt);
 		num/=10;
 		numSprt.x0-=13;
 	}
+}
+
+void printCd(u_char cdn) {
+	static SVECTOR cdvert[4]={{-256,0,256},{-256,0,-256},{256,0,256},{256,0,-256}};
+	POLY_FT4 *ccdp=&cdp[cdn];
+	static MATRIX m;
+	SVECTOR cdang={1024,VSync(-1)<<5,0};
+	VECTOR cdpos={360,200,persp+500};
+	RotMatrix(&cdang, &m); //Get a rotation matrix from the vector
+	TransMatrix(&m, &cdpos);	//Sets the translation
+	SetRotMatrix(&m);
+	SetTransMatrix(&m);
+	RotTransPers4(&cdvert[0],&cdvert[1],&cdvert[2],&cdvert[3],(long*)&ccdp->x0,(long*)&ccdp->x1,(long*)&ccdp->x2,(long*)&ccdp->x3,&dmy,&flg);
+	DrawPrim(ccdp);
+	RotMatrix(&ang, &m); //Get a rotation matrix from the vector
+	TransMatrix(&m, &pos);	//Sets the translation
+	SetRotMatrix(&m);
+	SetTransMatrix(&m);
 }
 
 void printFEModel(u_char *p, short dx, short dy) {

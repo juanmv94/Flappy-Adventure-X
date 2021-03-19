@@ -10,5 +10,6 @@ objmap=[
 {name:"Sign",props:[{name:"direction",type:0,mod:true}],rect:[[-8,-20],[16,20]],def:[0]},
 {name:"Memcard",props:[],rect:[[-8,-8],[24,24]],def:[]},
 {name:"Level Platform",props:[{name:"level",type:0,mod:true}],rect:[[-16,-8],[32,8]],def:[1]},
-{name:"Angry Bird",props:[{name:"left",type:0,mod:true},{name:"speed",type:0,mod:true}],rect:[[-8,-16],[16,16]],def:[0,2]}
+{name:"Angry Bird",props:[{name:"left",type:0,mod:true},{name:"speed",type:0,mod:true}],rect:[[-8,-16],[16,16]],def:[0,2]},
+{name:"Cheat Platform",props:[],rect:[[-16,-8],[32,8]],def:[]}
 ];

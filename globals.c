@@ -14,6 +14,7 @@ SVECTOR x[64][64][2];	//vertices
 VECTOR flappyPos = {0, 0, persp};	//translation vector (position)
 SVECTOR flappyAng={0,0,0};	//angle (512=45d)
 u_char fflags=0;	//1=direction, 2=floor, 4=force floor, 8=death, 16=override cam, 32=pause
+u_char fcheats=0;	//1=coin magnet, 2=turn on air, 4=all terrain, 8=LVL unlock
 short vacc;
 
 u_char ncoins;
@@ -27,8 +28,15 @@ u_char levelExitCode;		//0=level in progress, 1=failed (pause menu exit, for exa
 u_long frame;
 
 //Graphic elements
-u_short tpages[3];
-DR_TPAGE tp[3];	//DR TPAGE for sprites
+u_short tpages[4];
+DR_TPAGE tp[4];	//DR TPAGE for sprites
+
+//CD
+POLY_FT4 cdp[4]={	//We still need to set tpage
+	{u0:0, v0:0, u1:0, v1:127, u2:127, v2:0, u3:127, v3:127},
+	{u0:128, v0:0, u1:128, v1:127, u2:255, v2:0, u3:255, v3:127},
+	{u0:0, v0:128, u1:0, v1:255, u2:127, v2:128, u3:127, v3:255},
+	{u0:128, v0:128, u1:128, v1:255, u2:255, v2:128, u3:255, v3:255}};
 
 //Flappy
 POLY_FT4 fp[4]={	//We still need to set tpage
@@ -68,8 +76,7 @@ struct DB* cdb;
 
 char stringholder[128];
 
-u_char audioChannel=0;
-char* songnames[]={"FADVX level0 song","Dj Gordy & SK - Secrets","Orange feat Sanna - Eternity","ACE OF BEAT - Responsible","On and on","New System - This Is The Night","Atmospheric - Oxigene 1997","Sylver - Smile Has Left ur Eyes"};
+char* songnames[]={"Apollo - Dance","Jazzberri eyes (Milk inc. remix)","Absolom - Where","Dj Rai - Step By Step","Corus - Destiny","Natascha Hagen - Without You","Flappy Adventure X - Final level","Flappy Adventure X - Credits","Chumi DJ - Follow My Dreams","Lucid - end of time","Wax - Destiny","DJ Rompe - I'm Just Dancing","Suzann - Little Bandit","Vicent de Moor - Fly Away","Critical mass - In your eyes","DJ Rompe & Sam Shokk - Ur Hands"};
 
 /////////////////FlappyEngine//////////////
 POLY_F4	f4; POLY_F3 f3;

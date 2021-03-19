@@ -86,6 +86,16 @@ Disc CDROMXA_PSX ;the disk format
 						Source C:\projects\FlappyX\cdrom\snd\sfx_ttac.vag
 					EndFile
 					
+					File SFX_LSER.VAG
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\snd\sfx_lser.vag
+					EndFile
+					
+					File SPLASH.TIM
+						XAFileAttributes Form1 Data
+						Source C:\projects\FlappyX\cdrom\SPLASH.TIM
+					EndFile
+					
 					File T1.TIM
 						XAFileAttributes Form1 Data
 						Source C:\projects\FlappyX\cdrom\t1.tim
@@ -110,59 +120,93 @@ Disc CDROMXA_PSX ;the disk format
 						XASource C:\projects\FlappyX\cdrom\2425.str
 					EndFile
 					
-					File BKG0.TIM
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG\BKG0.TIM
-					EndFile
-					
-					File LVL0.LVL
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\LVL\LVL0.LVL
-					EndFile
-					
-					File BKG1.TIM
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG\BKG1.TIM
-					EndFile
-					
-					File LVL1.LVL
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\LVL\LVL1.LVL
-					EndFile
-					
-					File BKG2.TIM
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG\BKG2.TIM
-					EndFile
-					
-					File LVL2.LVL
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\LVL\LVL2.LVL
-					EndFile
-					
-					File BKG3.TIM
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG\BKG3.TIM
-					EndFile
-					
-					File LVL3.LVL
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\LVL\LVL3.LVL
-					EndFile
-					
-					File BKG4.TIM
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\BKG\BKG4.TIM
-					EndFile
-					
-					File LVL4.LVL
-						XAFileAttributes Form1 Data
-						Source C:\projects\FlappyX\cdrom\LVL\LVL4.LVL
-					EndFile
-					
-					File MUSIC1.XA
-						XASource C:\projects\FlappyX\cdrom\MUSIC1.XA
-					EndFile
+					Directory GAME
+						
+						File BKG0.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG0.TIM
+						EndFile
+						
+						File LVL0.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL0.LVL
+						EndFile
+						
+						File BKG1.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG1.TIM
+						EndFile
+						
+						File LVL1.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL1.LVL
+						EndFile
+						
+						File BKG2.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG2.TIM
+						EndFile
+						
+						File LVL2.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL2.LVL
+						EndFile
+						
+						File BKG3.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG3.TIM
+						EndFile
+						
+						File LVL3.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL3.LVL
+						EndFile
+						
+						File BKG4.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG4.TIM
+						EndFile
+						
+						File LVL4.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL4.LVL
+						EndFile
+						
+						File BKG5.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG5.TIM
+						EndFile
+						
+						File LVL5.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL5.LVL
+						EndFile
+						
+						File BKG6.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\BKG\BKG6.TIM
+						EndFile
+						
+						File LVL6.LVL
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\LVL\LVL6.LVL
+						EndFile
+						
+						File MUSIC.XA
+							XASource C:\projects\FlappyX\cdrom\MUSIC.XA
+						EndFile
+
+						File CREDITS.TXT
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\CREDITS.TXT
+						EndFile
+						
+						File CREDITS.TIM
+							XAFileAttributes Form1 Data
+							Source C:\projects\FlappyX\cdrom\CREDITS.TIM
+						EndFile
+						
+					EndDirectory ;close the directory
 
 				EndHierarchy ;ends the root directory definition
 

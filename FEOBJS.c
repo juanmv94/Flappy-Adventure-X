@@ -64,7 +64,7 @@ void platform(struct FEObject* feo) {
 			short nextmx = (feo->data[4]) ? rsin((1+frame<<feo->data[5])+(feo->data[6]<<4))/feo->data[4] : 0;	//animation desp x
 			fflags|=4;
 			flappyPos.vy=feo->dy-11+nextmy;
-			flappyPos.vx+=(nextmx-mx);
+			if (!(fflags&40)) flappyPos.vx+=(nextmx-mx);
 		}
 		else if (diff>=-3 && diff<13) {	//bottom
 			short nextmy=rsin((frame+1)<<4)/70;
@@ -142,9 +142,12 @@ void block(struct FEObject* feo) {
 void hotfloor(struct FEObject* feo) {
 	SVECTOR vertex[4]={{feo->dx,feo->dy,0},{feo->dx+16,feo->dy,0},{feo->dx,feo->dy,persp+16},{feo->dx+16,feo->dy,persp+16}};
 	short val=rsin((frame<<feo->data[0])+(feo->data[1]<<4))>>5;
-	f4.r0=(val==128)?255:128+val; f4.g0=0; f4.b0=0;
+	POLY_G4 light={g0:0,b0:0,g1:0,b1:0,r2:0,g2:0,b2:0,r3:0,g3:0,b3:0};
+	f4.r0=light.r0=light.r1=(val==128)?255:128+val; f4.g0=0; f4.b0=0;
 	RotTransPers4(&vertex[0],&vertex[1],&vertex[2],&vertex[3],(long*)&f4.x0,(long*)&f4.x1,(long*)&f4.x2,(long*)&f4.x3,&dmy,&flg);
 	if (f4.y0>=f4.y2) DrawPrim(&f4);
+	light.x0=f4.x2; light.y0=f4.y2; light.x1=f4.x3; light.y1=f4.y3; light.x2=light.x0; light.y2=light.y0-32; light.x3=light.x1; light.y3=light.y1-32;
+	SetPolyG4(&light); SetSemiTrans(&light,1); DrawPrim(&tp[2]); DrawPrim(&light);
 	if ((feo->dy-flappyPos.vy)<8 && (feo->dy-flappyPos.vy)>0 && (feo->dx-flappyPos.vx)<0 && (feo->dx-flappyPos.vx)>-16) {
 		if (val>96) fflags|=8;
 	}
@@ -214,9 +217,9 @@ void memcard(struct FEObject* feo) {
 
 void lvlplatf(struct FEObject* feo) {
 	static u_char timeinarr[6]={0};	//6 levels
-	static char *levelNames[]={"Tedelche","The shortcut\n(Hellin)","Ice world\n(Riopar)","Feria GrandPrix\n(Albacete)",
-			"Angry Birds\n(Ontur)","not implemented\n","not implemented\n"};	//6 levels
-	static u_char totalCoins[]={0,89,81,9,31,0,0};	//6 levels
+	static char *levelNames[]={"Level Select (Tedelche)","The Shortcut\n(Hellin)","Ice World\n(Riopar)","Feria GrandPrix\n(Albacete)",
+			"Angry Birds\n(Ontur)","Low Gravity\n(Space)","Final Race\n(Bird Island)"};	//6 levels
+	static u_char totalCoins[]={0,89,81,9,45,59,1};	//6 levels
 	printFEModel(model_lvlplatf, feo->dx, feo->dy);
 	if (abs(feo->dx-flappyPos.vx)<12 && (feo->dy-flappyPos.vy)<12) {	//collision
 		u_char timein=timeinarr[feo->data[0]];
@@ -225,11 +228,15 @@ void lvlplatf(struct FEObject* feo) {
 		DrawPrim(&tp[2]);
 		DrawPrim(&tile);
 		DrawPrim(&tp[0]);
-		PRINTFMT(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL %d:\n\n%s\n\n%d/%d\n         >START",feo->data[0],levelNames[feo->data[0]],mCardData.saveData[feo->data[0]],totalCoins[feo->data[0]]);
+		if (fcheats&8 || feo->data[0]<2 || mCardData.saveData[feo->data[0]-1]) {
+			PRINTFMT(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL %d:\n\n%s\n\n%d/%d\n         >START",feo->data[0],levelNames[feo->data[0]],mCardData.saveData[feo->data[0]],totalCoins[feo->data[0]]);
+			if (!gamePad[0].start) levelExitCode=feo->data[0];
+		} else {
+			print(12,12,timein<<3,timein<<3,timein<<3,1,"LEVEL LOCKED\n\n??????????\n??????");
+		}
 		if (timein<16) timeinarr[feo->data[0]]++;
 		fflags|=4;
 		flappyPos.vy=feo->dy-11;
-		if (!gamePad[0].start) levelExitCode=feo->data[0];
 	} else {
 		timeinarr[feo->data[0]]=0;
 	}
@@ -242,6 +249,7 @@ void angrybird(struct FEObject* feo) {
 	RotTransPers(&v,(long*)&agb.x0,&dmy,&flg);
 	agb.x0-=22; agb.y0-=40;
 	SetSprt(&agb); setShadeTex(&agb,1);
+	DrawPrim(&tp[0]);
 	DrawPrim(&agb);
 	if (dify>0 && dify<32 && abs(feo->dx-flappyPos.vx)<(32-dify>>1)) fflags|=8;		//collision (triangle)
 	if (frame&feo->data[1] && !(fflags&40)) {																	//Move
@@ -255,6 +263,40 @@ void angrybird(struct FEObject* feo) {
 	}
 }
 
+void chtplatf(struct FEObject* feo) {
+	static u_char timein=0;
+	printFEModel(model_chtplatf, feo->dx, feo->dy);
+	if (abs(feo->dx-flappyPos.vx)<12 && (feo->dy-flappyPos.vy)<12 && (feo->dy-flappyPos.vy)>0) {	//collision
+		static struct s_gamePad lastGamePad;
+		TILE tile={x0:8,y0:8,w:timein*11,h:timein<<2,r0:timein<<3,g0:0,b0:timein<<2};
+		SetTile(&tile); SetSemiTrans(&tile,1);
+		DrawPrim(&tp[2]);
+		DrawPrim(&tile);
+		DrawPrim(&tp[0]);
+		print(12,12,timein<<3,timein<<3,timein<<3,1,"CHEATS");
+		if (fcheats&1) print(12,26,timein<<3,0,timein<<3,1,"L1: Easy coins  (ON)");
+		else print(12,26,0,timein<<3,timein<<3,1,"L1: Easy coins  (OFF)");
+		if (fcheats&2) print(12,36,timein<<3,0,timein<<3,1,"L2: Turn on air (ON)");
+		else print(12,36,0,timein<<3,timein<<3,1,"L2: Turn on air (OFF)");
+		if (fcheats&4) print(12,46,timein<<3,0,timein<<3,1,"R1: All terrain (ON)");
+		else print(12,46,0,timein<<3,timein<<3,1,"R1: All terrain (OFF)");
+		if (fcheats&8) print(12,56,timein<<3,0,timein<<3,1,"R2: LVL Unlock  (ON)");
+		else print(12,56,0,timein<<3,timein<<3,1,"R2: LVL Unlock  (OFF)");
+		
+		if (timein<16) timein++;
+		fflags|=4;
+		flappyPos.vy=feo->dy-11;
+		
+		if (!gamePad[0].l1 && lastGamePad.l1) fcheats^=1;
+		if (!gamePad[0].l2 && lastGamePad.l2) fcheats^=2;
+		if (!gamePad[0].r1 && lastGamePad.r1) fcheats^=4;
+		if (!gamePad[0].r2 && lastGamePad.r2) fcheats^=8;
+		memcpy(&lastGamePad,&gamePad[0],sizeof(struct s_gamePad));
+	} else {
+		timein=0;
+	}
+}
+
 typedef void (*FEFunc)(struct FEObject*);
 
-FEFunc FEFuncArray[12]= {&alert,&yflag,&platform,&pipe,&button,&door,&block,&hotfloor,&sign,&memcard,&lvlplatf,&angrybird};
+FEFunc FEFuncArray[13]= {&alert,&yflag,&platform,&pipe,&button,&door,&block,&hotfloor,&sign,&memcard,&lvlplatf,&angrybird,&chtplatf};

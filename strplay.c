@@ -158,7 +158,7 @@ int PlayStr(int xres, int yres, char* filename, u_long numframes) {	//Main STR p
 		disp.isrgb24 = IS_RGB24;
 		disp.disp.w = disp.disp.w*2/3;
 		#endif
-		disp.screen.y=32;
+		disp.screen.y=28;
 
 		VSync(0);			// VSync to avoid screen tearing
 		PutDispEnv(&disp);	// Apply the video parameters
